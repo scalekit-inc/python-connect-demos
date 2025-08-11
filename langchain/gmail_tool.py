@@ -1,13 +1,6 @@
-import scalekit.client
 from langchain.tools import tool
 from typing import Optional
-
-# Initialize scalekit client
-scalekit_client = scalekit.client.ScalekitClient(
-    client_id="skc_53814741268693059",
-    client_secret="test_ZBeqNRT3fQjTfGzFmFObkTDMlMbndBjZ3jOBADvd5OONZFBWzeOBmXiWwjlGLqCu",
-    env_url="https://kindle-dev.scalekit.cloud",
-)
+from scalekit_client import scalekit_client
 
 @tool
 def fetch_gmail_emails(max_results: int = 10, identifier: str = "avinash.kamath@scalekit.com") -> str:

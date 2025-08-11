@@ -1,8 +1,13 @@
 import scalekit.client
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 scalekit = scalekit.client.ScalekitClient(
-    client_id="skc_53814741268693059",
-    client_secret="test_ZBeqNRT3fQjTfGzFmFObkTDMlMbndBjZ3jOBADvd5OONZFBWzeOBmXiWwjlGLqCu",
+    client_id=os.getenv("SCALKIT_CLIENT_ID"),
+    client_secret=os.getenv("SCALKIT_CLIENT_SECRET"),
     env_url="https://kindle-dev.scalekit.cloud",
 )
 
