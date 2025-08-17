@@ -16,7 +16,7 @@ def send_slack_message(channel: str, text: str, identifier: str = "avinash.kamat
     """
     try:
         response = scalekit_client.connect.execute_tool(
-            tool_name="SLACK.SEND_MESSAGE",
+            tool_name="slack_send_message",
             identifier=identifier,
             tool_input={
                 "channel": channel,

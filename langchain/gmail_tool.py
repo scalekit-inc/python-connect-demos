@@ -16,7 +16,7 @@ def fetch_gmail_emails(max_results: int = 10, identifier: str = "avinash.kamath@
     """
     try:
         response = scalekit_client.connect.execute_tool(
-            tool_name="GMAIL.FETCH_MAILS",
+            tool_name="gmail_fetch_mails",
             identifier=identifier,
             tool_input={
                 "max_results": max_results,
