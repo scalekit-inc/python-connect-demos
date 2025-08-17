@@ -7,7 +7,6 @@ from scalekit.connect.types import ToolMapping
 load_dotenv()
 
 scalekit_client = scalekit.client.ScalekitClient(
-
     os.getenv("SCALEKIT_ENV_URL"),
     os.getenv("SCALEKIT_CLIENT_ID"),
     os.getenv("SCALEKIT_CLIENT_SECRET")

@@ -35,7 +35,7 @@ def gmail_pre_modifier(tool_input: ToolInput):
 
 response = scalekit.connect.execute_tool(
     tool_name="gmail_fetch_mails",
-    identifier="avinash.kamath@scalekit.com",
+    identifier="default",
     tool_input={
         "max_results" : 1
     },
