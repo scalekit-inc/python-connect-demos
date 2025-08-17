@@ -1,4 +1,5 @@
 langchain>=0.1.0
 langchain-openai>=0.1.0
 python-dotenv>=1.0.0
-a-beta-scalekit==2.3.1b1
+a-beta-scalekit==2.3.1b3
+langchain-mcp-adapters
