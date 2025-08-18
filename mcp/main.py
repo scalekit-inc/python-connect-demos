@@ -4,47 +4,22 @@ import asyncio
 from dotenv import load_dotenv
 import scalekit.client
 from scalekit.connect.types import ToolMapping
+from utils import authenticate_tool
 
 load_dotenv()
 
-scalekit_client = scalekit.client.ScalekitClient(
-    os.getenv("SCALEKIT_ENV_URL"),
-    os.getenv("SCALEKIT_CLIENT_ID"),
-    os.getenv("SCALEKIT_CLIENT_SECRET")
+scalekit = scalekit.client.ScalekitClient(
+    client_id=os.getenv("SCALEKIT_CLIENT_ID"),
+    client_secret=os.getenv("SCALEKIT_CLIENT_SECRET"),
+    env_url=os.getenv("SCALEKIT_ENV_URL"),
 )
-connect = scalekit_client.connect
-
-def authenticate_tool(connection_name, identifier):
-    
-    try:
-        response = connect.get_connected_account(
-            connection_name=connection_name,
-            identifier=identifier
-        )
-        print(response)
-        if(response.connected_account.status != "ACTIVE"):
-            print(f"{connection_name} is not connected: {response.connected_account.status}")
-            link_response = connect.get_authorization_link(
-                connection_name=connection_name,
-                identifier=identifier
-            )
-            print(f"click on the link to authorize {connection_name}", link_response.link)
-            input(f"Press Enter after authorizing {connection_name}...")
-    except Exception as e:
-        link_response = connect.get_authorization_link(
-            connection_name=connection_name,
-            identifier=identifier
-        )
-        print(f"click on the link to authorize {connection_name}", link_response.link)
-        input(f"Press Enter after authorizing {connection_name}...")
-    
-    return True
+connect = scalekit.connect
 
 async def main():
 
     #create connected account for identifier default and connection name GMAIL,CALENDAR
-    authenticate_tool("GMAIL", "user_1234567890")
-    authenticate_tool("GCAL", "user_1234567890")
+    authenticate_tool(connect,"GMAIL", "user_1234567890")
+    authenticate_tool(connect,"GCAL", "user_1234567890")
 
     mcp_response = connect.create_mcp(
         identifier = "user_1234567890",

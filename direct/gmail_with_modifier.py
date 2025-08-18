@@ -2,7 +2,7 @@ import scalekit.client
 import os
 from dotenv import load_dotenv
 from scalekit.connect.types import ToolInput, ToolOutput
-
+from utils import authenticate_tool
 
 # Load environment variables
 load_dotenv()
@@ -14,46 +14,28 @@ scalekit = scalekit.client.ScalekitClient(
 )
 connect = scalekit.connect
 
-def authenticate_tool(connection_name, identifier):
-    
-    try:
-        response = connect.get_connected_account(
-            connection_name=connection_name,
-            identifier=identifier
-        )
-        if(response.connected_account.status != "ACTIVE"):
-            print(f"{connection_name} is not connected: {response.connected_account.status}")
-            link_response = connect.get_authorization_link(
-                connection_name=connection_name,
-                identifier=identifier
-            )
-            print(f"🔗click on the link to authorize {connection_name}", link_response.link)
-            input(f"⎆ Press Enter after authorizing {connection_name}...")
-    except Exception as e:
-        link_response = connect.get_authorization_link(
-            connection_name=connection_name,
-            identifier=identifier
-        )
-        print(f"🔗 click on the link to authorize {connection_name}", link_response.link)
-        input(f"⎆ Press Enter after authorizing {connection_name}...")
-    
-    return True
+# Use Scalekit Connect to authenticate a user against a connection. If the user has already authenticated, this will do nothing.
+# otherwise, it will return a link to authorize the connection.
+authenticate_tool(connect, "GMAIL", user_id)
 
-authenticate_tool("GMAIL", user_id)
+# sometimes, the tool input needs to be modified in a deterministic way before the tool is executed.
+# For example, we can modify the query to only fetch unread emails regardless of what the user asks for or what the LLM determines.
+@connect.pre_modifier(tool_names=["gmail_fetch_mails"])
+def gmail_pre_modifier(tool_input: ToolInput):
+    tool_input['query'] = 'is:unread'
+    return tool_input
 
-
+# sometimes, the tool output needs to be modified in a deterministic way after the tool is executed.
+# For example, we can modify the output to only return the first email snippet regardless of what the tool returns.
+# this is an effective way to reduce the amount of data that is returned to the LLM to save on tokens.
 @connect.post_modifier(tool_names=["gmail_fetch_mails"])
 def gmail_post_modifier(output:ToolOutput):
     # only return the first email snippet
     # should return a dict
     return {"response":output['messages'][0]['snippet']}
 
-@connect.pre_modifier(tool_names=["gmail_fetch_mails"])
-def gmail_pre_modifier(tool_input: ToolInput):
-    tool_input['query'] = 'is:unread'
-    return tool_input
 
-
+# execute the tool for a given user and tool input
 response = connect.execute_tool(
     tool_name="gmail_fetch_mails",
     identifier=user_id,
@@ -61,5 +43,8 @@ response = connect.execute_tool(
         "max_results" : 1
     },
 )
+
+
+
 
 print(f"✅ Results: {response}")
