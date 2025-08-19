@@ -8,7 +8,7 @@ from scalekit.v1.tools.tools_pb2 import Filter
 
 connect = scalekit_client.connect
 load_dotenv()
-identifier = "sdk-avinash"
+identifier = "user_12345678"  # Replace with your identifier
 
 def authenticate_tool(connection_name,identifier):
     link_response = connect.get_authorization_link(
@@ -21,15 +21,13 @@ def authenticate_tool(connection_name,identifier):
 # Create the agent and executor
 if __name__ == "__main__":
 
-    #Outh2.0 flows for all connections
-
     authenticate_tool("gcal", identifier)
 
 
     tools =  connect.langchain.get_tools(identifier=identifier,filter = Filter(
         provider = "GOOGLECALENDAR",
     ))
-    print("Available tools:", tools)
+    #print("Available tools:", tools)
 
     llm = ChatOpenAI(model="gpt-4o")
     agent = create_openai_tools_agent(llm, tools, prompt)
@@ -40,7 +38,7 @@ if __name__ == "__main__":
         {
             "input":
                 '''
-                What are the events in my calendar for next 3 days today is 19th august 2025.
+                What are the events in my calendar for tomorrow and day after today is 19th august 2025.
                 Please provide the details of each event including the time, title, and description.
                 ''',
         }
