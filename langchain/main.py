@@ -24,10 +24,13 @@ if __name__ == "__main__":
     authenticate_tool("gcal", identifier)
 
 
-    tools =  connect.langchain.get_tools(identifier=identifier,filter = Filter(
-        provider = "GOOGLECALENDAR",
-    ))
-    #print("Available tools:", tools)
+    tools =  connect.langchain.get_tools(
+        identifier=identifier,
+        filter =Filter(
+            provider = "GOOGLECALENDAR",
+            tool_name=["googlecalendar_list_events", "googlecalendar_create_event"], # all tools for provider used by default
+        )
+    )
 
     llm = ChatOpenAI(model="gpt-4o")
     agent = create_openai_tools_agent(llm, tools, prompt)
@@ -38,7 +41,7 @@ if __name__ == "__main__":
         {
             "input":
                 '''
-                What are the events in my calendar for tomorrow and day after today is 19th august 2025.
+                What are the events in my calendar for tomorrow and day after, today is 19th august 2025.
                 Please provide the details of each event including the time, title, and description.
                 ''',
         }
