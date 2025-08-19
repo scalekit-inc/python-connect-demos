@@ -11,11 +11,10 @@ scalekit = scalekit.client.ScalekitClient(
     env_url=os.getenv("SCALEKIT_ENV_URL"),
 )
 connect = scalekit.connect
-link_response = connect.get_authorization_link(
+link_response = scalekit.connect.get_authorization_link(
     connection_name="GMAIL",
     identifier="default",
 )
-
 print("click on the link to authorize gmail", link_response.link)
 input("Press Enter after authorizing gmail...")
 
