@@ -15,7 +15,7 @@ connect = scalekit.connect
 
 link_response = connect.get_authorization_link(
     connection_name="SLACK",
-    identifier="default",
+    identifier="avinash",
 )
 
 print("click on the link to authorize slack", link_response.link)
@@ -23,7 +23,7 @@ input("Press Enter after authorizing Slack...")
 
 response = scalekit.connect.execute_tool(
     tool_name="slack_send_message",
-    identifier="default",
+    identifier="avinash",
     tool_input={
         "channel": "#connect",
         "text": "Hello from demo!",

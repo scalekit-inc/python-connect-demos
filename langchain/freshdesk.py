@@ -10,7 +10,7 @@ from prompt import prompt
 # Load environment variables
 load_dotenv()
 connection_name = "freshdesk"
-identifier = "default"
+identifier = "avinash"
 
 
 scalekit = scalekit.client.ScalekitClient(
@@ -22,21 +22,9 @@ connect = scalekit.connect
 
 
 
-connected_account = connect.get_or_create_connected_account(
-    connection_name=connection_name,
-    identifier=identifier,
-    authorization_details= {
-        "static_auth": {
-            "domain": "avinashmkamath.freshdesk.com",
-            "password": "ikipj7k9UJJWRXZganAk",
-            "username": "ikipj7k9UJJWRXZganAk"
-        }
-    }
-)
-
 tools =  connect.langchain.get_tools(
     identifier=identifier,
-    providers = ["FRESHDESK"],
+    providers = ["FRESHDESK","SLACK","GMAIL"],
 )
 
 llm = ChatOpenAI(model="gpt-4o")
@@ -48,15 +36,22 @@ result = agent_executor.invoke(
     {
         "input":
             '''
-            I need you to help me test a complete customer support workflow in Freshdesk:
-            Create a new contact for "Sarah Johnson" with email "sarah.johnson@testcorp.com", job title "IT Manager", and phone "+1-555-0123"
-            Create a high priority ticket from this contact about "Email server down - entire team cannot send emails" with description "Our Exchange server crashed this morning and 50+ employees cannot send or receive emails. This is blocking all business operations."
-            Update the ticket to assign it to agent ID 1130000243991 and change status to "Pending" while we investigate
-            Add a reply to the ticket saying "Hi Sarah, we've received your ticket and our senior engineer is investigating the Exchange server issue. We'll provide an update within 2 hours. Thank you for your patience."
+            I need you to help me test a complete customer support workflow in Freshdesk and slack:
+            Create a new contact for "Jiten" with email "jitender.rana@scalekit.com", job title "testter", and phone "+1-555-0123"
+            Create a high priority ticket from this contact about "All tests are failing" with description "Site Has crashed"
+            Update the ticket to assign it to agent  avinash figure the agent by listing  and change status to "Pending" while we investigate
+            
+            Add a reply to the ticket saying "Hi Jiten, we've received your ticket and our senior engineer is investigating the Exchange server issue. We'll provide an update within 2 hours. Thank you for your patience."
+            
             Get the full ticket details to review the conversation
-            Update the ticket status to "Resolved" and add a final reply: "The Exchange server has been restored. All email services are now functioning normally. Please test and confirm everything is working on your end."
+            
+            Update the ticket status to "Resolved" and add a final reply: "The server has been restored. All email services are now functioning normally. Please test and confirm everything is working on your end."
+            
             List all tickets updated in the last 24 hours to see our recent activity
+            
             Execute this complete workflow and show me the results of each step.
+            
+            Send the summary of this entire interaction to #connect channel in slack
             ''',
     }
 )
