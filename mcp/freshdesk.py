@@ -16,20 +16,21 @@ connect = scalekit.connect
 
 def main():
 
-    authenticate_tool(connect,"GMAIL", "avinash")
-    authenticate_tool(connect,"GCAL", "avinash")
+
+    connected_account = connect.get_or_create_connected_account(
+        connection_name="FRESHDESK",
+        identifier="avinash",
+        authorization_details= {
+            "static_auth": {
+                "domain": "avinashmkamath.freshdesk.com",
+                "username": "ikipj7k9dasd8TsUJJWRXZganAk"
+            }
+        }
+    )
 
     mcp_response = connect.create_mcp(
         identifier = "avinash",
         tool_mappings = [
-            ToolMapping(
-                tool_names=["gmail_fetch_mails"],
-                connection_name="GMAIL",
-            ),
-            ToolMapping(
-                tool_names=["googlecalendar_list_events", "googlecalendar_create_event"],
-                connection_name="GCAL",
-            ),
             ToolMapping(
                 tool_names=["freshdesk_create_ticket","freshdesk_list_tickets"],
                 connection_name="FRESHDESK",
