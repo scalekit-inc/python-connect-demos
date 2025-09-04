@@ -58,7 +58,7 @@ result = agent_executor.invoke(
     {
         "input":
             '''
-        get all my accounts from salesforce with united in as the name
+        get all my accounts from salesforce with united  in the name
         ''',
     }
 )
