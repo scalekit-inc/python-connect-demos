@@ -8,36 +8,26 @@ from utils import authenticate_tool
 load_dotenv()
 
 scalekit = scalekit.client.ScalekitClient(
-    client_id=os.getenv("SCALEKIT_CLIENT_ID"),
-    client_secret=os.getenv("SCALEKIT_CLIENT_SECRET"),
-    env_url=os.getenv("SCALEKIT_ENV_URL"),
+    client_id="skc_88455227035877920",
+    client_secret="test_rIhgBWjlWD2dTA8srZbWYSvvdHig3ivgFrlgIJzKvawELRBAGaScYpd1PTvpoBwT",
+    env_url="https://scalekit-ae5eddy7aabca-dev.scalekit.cloud"
 )
 connect = scalekit.connect
 
 def main():
 
 
-    connected_account = connect.get_or_create_connected_account(
-        connection_name="FRESHDESK",
-        identifier="avinash",
-        authorization_details= {
-            "static_auth": {
-                "domain": "avinashmkamath.freshdesk.com",
-                "username": "ikipj7k9dasd8TsUJJWRXZganAk"
-            }
-        }
-    )
+
 
     mcp_response = connect.create_mcp(
-        identifier = "avinash",
+        identifier = "mihir.abnave@scalekit.com",
         tool_mappings = [
             ToolMapping(
-                tool_names=["freshdesk_create_ticket","freshdesk_list_tickets"],
-                connection_name="FRESHDESK",
+                tool_names=[],
+                connection_name="F4resh",
             )
         ]
     )
-
     print(mcp_response.url)
 
 main()

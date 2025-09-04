@@ -61,7 +61,6 @@ result = agent_executor.invoke(
             Get the full ticket details to review the conversation
             
             Update the ticket status to "Resolved" and add a final reply: "The server has been restored. All email services are now functioning normally. Please test and confirm everything is working on your end."
-            
             List all tickets updated in the last 24 hours to see our recent activity
             
             Execute this complete workflow and show me the results of each step.
