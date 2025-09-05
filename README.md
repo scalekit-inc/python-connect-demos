@@ -112,11 +112,11 @@ Each demo directory contains specific setup and running instructions. Navigate t
 
 ## Additional Resources
 
-- 📚 [Scalekit Python SDK Documentation](https://docs.scalekit.com/sdk/python)
-- 🔧 [API Reference](https://docs.scalekit.com/apis)
-- 💬 [Community Support](https://github.com/scalekit-inc/scalekit-sdk-python/discussions)
-- 🎯 [Get Started Guide](https://docs.scalekit.com/quick-start-guide)
-- ⚡ [Python Integration Guide](https://docs.scalekit.com/integrations/python)
+  - 📚 [Scalekit Documentation](https://docs.scalekit.com)
+  - 🔧 [API Reference](https://docs.scalekit.com/apis/)
+  - 🚀 [Full Stack Auth Quickstart](https://docs.scalekit.com/fsa/quickstart/)
+  - 💬 [Community Examples](https://github.com/orgs/scalekit-developers/repositories)
+  - 🐍 [Python SDK](https://github.com/scalekit-inc/scalekit-sdk-python)
 
 ## Contributing
 
