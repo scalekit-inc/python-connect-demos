@@ -8,7 +8,7 @@ from scalekit.actions.models.tool_mapping import ToolMapping
 # Load environment variables
 load_dotenv()
 connection_name = "SALESFORCE"
-identifier = "asd-123"
+identifier = "johndoe@example.com"
 
 
 scalekit = scalekit.client.ScalekitClient(
