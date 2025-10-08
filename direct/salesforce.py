@@ -34,9 +34,9 @@ response = actions.get_connected_account(
 
 connected_account = response.connected_account
 
-tokens = connected_account.authorization_details.get("oauth_token")
-access_token = tokens.get("access_token")
-refresh_token = tokens.get("refresh_token")
+tokens = connected_account.authorization_details["oauth_token"]
+access_token = tokens["access_token"]
+refresh_token = tokens["refresh_token"]
 
 print("access token:",access_token)
 print("refresh token:",refresh_token)
