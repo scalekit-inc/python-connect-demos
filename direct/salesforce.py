@@ -7,8 +7,8 @@ from scalekit.actions.models.tool_mapping import ToolMapping
 
 # Load environment variables
 load_dotenv()
-connection_name = "SALESFORCE"
-identifier = "johndoe@example.com"
+connection_name = "salesforce-external"
+identifier = "user-test-123"
 
 
 scalekit = scalekit.client.ScalekitClient(
@@ -40,3 +40,25 @@ refresh_token = tokens["refresh_token"]
 
 print("access token:",access_token)
 print("refresh token:",refresh_token)
+
+
+
+#For salesforce update your domain and API version of your customer instance
+updated_api_config = {
+    "version": "API VERSION",
+    "domain": "orgfarm-69f4803bbd-dev-ed.develop.my.salesforce.com",
+}
+
+actions.update_connected_account(
+    connection_name=connection_name,
+    identifier=identifier,
+    api_config=updated_api_config,
+)
+
+response = scalekit.connect.execute_tool(
+    tool_name="salesforce_soql_execute",
+    identifier=identifier,
+    tool_input={
+        "soql_query": "SELECT Id, Name FROM Account"
+    }
+)
