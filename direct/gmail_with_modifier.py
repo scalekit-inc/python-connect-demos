@@ -1,12 +1,12 @@
 import scalekit.client
 import os
 from dotenv import load_dotenv
-from scalekit.connect.types import ToolInput, ToolOutput
+from scalekit.actions.types import ToolInput, ToolOutput
 from utils import authenticate_tool
 
 # Load environment variables
 load_dotenv()
-user_id = "user_1234567890"
+user_id = "user_123456789123"
 scalekit = scalekit.client.ScalekitClient(
     client_id=os.getenv("SCALEKIT_CLIENT_ID"),
     client_secret=os.getenv("SCALEKIT_CLIENT_SECRET"),

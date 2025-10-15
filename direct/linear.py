@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-identifier="avinash-k"
+identifier="user-1234"
 
 scalekit = scalekit.client.ScalekitClient(
     client_id=os.getenv("SCALEKIT_CLIENT_ID"),
@@ -13,17 +13,17 @@ scalekit = scalekit.client.ScalekitClient(
 )
 actions = scalekit.actions
 link_response = actions.get_authorization_link(
-    connection_name="GMAIL",
+    connection_name="linear-2",
     identifier=identifier
 )
-print("click on the link to authorize gmail", link_response.link)
-input("Press Enter after authorizing gmail...")
+print("click on the link to authorize linear", link_response.link)
+input("Press Enter after authorizing linear...")
 
 response = scalekit.connect.execute_tool(
-    tool_name="gmail_fetch_mails",
+    tool_name="linear_issues_list",
     identifier=identifier,
     tool_input={
-        "max_results" : 1
+        "assignee" : "avinash.kamath@scalekit.com",
     },
 )
 
