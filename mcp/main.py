@@ -1,60 +1,116 @@
-
 import os
-import asyncio
 from dotenv import load_dotenv
 import scalekit.client
-from scalekit.connect.types import ToolMapping
-from utils import authenticate_tool
+from scalekit.actions.models.mcp_config import McpConfigConnectionToolMapping
+from scalekit.actions.types import (GetMcpInstanceAuthStateResponse)
+from langgraph.prebuilt import create_react_agent
+import asyncio
 
 load_dotenv()
+
+CONFIG_NAME = "reminder-manager"
+CONFIG_DESCRIPTION = "Summarizes emails and creates calendar reminder event"
+CONFIG_DESCRIPTION_UPDATED = "Updated summary and calendar automation config"
+CONFIG_MAPPINGS = [
+    McpConfigConnectionToolMapping(
+        connection_name="MY_GMAIL",
+        tools=[],
+    ),
+    McpConfigConnectionToolMapping(
+        connection_name="MY_CALENDAR",
+        tools=[
+            "googlecalendar_create_event",
+            "googlecalendar_delete_event",
+        ],
+    ),
+]
+INSTANCE_USER_IDENTIFIER = "john-doe"
 
 scalekit = scalekit.client.ScalekitClient(
     client_id=os.getenv("SCALEKIT_CLIENT_ID"),
     client_secret=os.getenv("SCALEKIT_CLIENT_SECRET"),
     env_url=os.getenv("SCALEKIT_ENV_URL"),
 )
-connect = scalekit.connect
+my_mcp = scalekit.actions.mcp
 
 async def main():
+    # First create the MCP config
+    config_exists = False
+    config_name = None
+    try:
+        list_resp = my_mcp.list_configs(filter_name=CONFIG_NAME)
+        config_exists = False
+        if len(list_resp.configs) > 0 and list_resp.configs[0].id:
+            config_exists = True
+            config_name = list_resp.configs[0].name
+            print(f"Config '{CONFIG_NAME}' already exists.")
+    except Exception as e:
+        print(f"Error checking for existing config: {e}")
 
-    #create connected account for identifier default and connection name GMAIL,CALENDAR
-    authenticate_tool(connect,"GMAIL", "user_1234567890")
-    authenticate_tool(connect,"GCAL", "user_1234567890")
+    if not config_exists:
+        print(f"Creating MCP config '{CONFIG_NAME}'...")
+        config_response = my_mcp.create_config(
+            name=CONFIG_NAME,
+            description=CONFIG_DESCRIPTION,
+            connection_tool_mappings=CONFIG_MAPPINGS,
+        )
+        config_name = config_response.config.name
+        print("Config name: ", config_name)
 
-    mcp_response = connect.create_mcp(
-        identifier = "user_1234567890",
-        tool_mappings = [
-            ToolMapping(
-                tool_names=["gmail_fetch_mails", "gmail_send_mails"],
-                connection_name="GMAIL",
-            ),
-            ToolMapping(
-                tool_names=["googlecalendar_list_events", "googlecalendar_create_event"],
-                connection_name="GCAL",
-            )
-        ]
+    # Now get or create an MCP instance for a user
+    print("Get Or Create MCP instance for user", INSTANCE_USER_IDENTIFIER, "on config", config_name)
+    instance_response = my_mcp.ensure_instance(
+        config_name=config_name,
+        user_identifier=INSTANCE_USER_IDENTIFIER,
+        name="reminder-mcp-john",
     )
+    print("Instance name:", instance_response.instance.name)
+    mcp_url = instance_response.instance.url
 
-    from langchain_mcp_adapters.client import MultiServerMCPClient
-    from langgraph.prebuilt import create_react_agent
+    # Now create auth links and load these links in browser to authenticate connections
+    auth_state_response = my_mcp.get_instance_auth_state(
+        instance_id=instance_response.instance.id,
+        include_auth_links=True,
+    )
+    for conn in getattr(auth_state_response, "connections", []):
+        print("Connection Name:", conn.connection_name, " Provider: ", conn.provider, " Auth Link: ", conn.authentication_link, "Auth Status: ", conn.connected_account_status)
 
-    # Print the URL of the created MCP
-    print("MCP created successfully:", mcp_response.url)
+    print("Authenticate with above links and type continue to connect the agent to this mcp")
+
+    # while True:
+    #     choice = input("Type 'continue' to proceed or 'exit' to quit: ").strip().lower()
+    #     if choice == "continue":
+    #         break
+    #     if choice == "exit":
+    #         print("Exiting.")
+    #         return
+    #     print("Invalid input. Please type 'continue' or 'exit'.")
+
+    # Connect your agent to the MCP
+    print("Connecting your agent to MCP:", mcp_url)
+
+    from importlib import import_module
+    try:
+        from langchain_mcp_adapters.client import MultiServerMCPClient
+    except ImportError:
+        mcp_mod = import_module("langchain_mcp_adapters.client")
+        MultiServerMCPClient = getattr(mcp_mod, "MultiServerMCPClient")
 
     client = MultiServerMCPClient(
         {
-            "gcal_demo": {
+            "reminder_demo": {
                 "transport": "streamable_http",
-                "url": mcp_response.url
+                "url": mcp_url
             },
         }
     )
+
     tools = await client.get_tools()
+
     agent = create_react_agent("openai:gpt-4.1", tools)
-    gcal_response = await agent.ainvoke({"messages": "show me my calendar events for today"})
+    openai_response = await agent.ainvoke({"messages": "get 1 latest email and create a calendar reminder event in next 15 mins for a duration of 15 mins."})
 
-    print(gcal_response)
+    print(openai_response)
 
-
-asyncio.run(main())
-
+if __name__ == "__main__":
+    asyncio.run(main())
