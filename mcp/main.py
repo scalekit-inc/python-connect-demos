@@ -77,14 +77,14 @@ async def main():
 
     print("Authenticate with above links and type continue to connect the agent to this mcp")
 
-    # while True:
-    #     choice = input("Type 'continue' to proceed or 'exit' to quit: ").strip().lower()
-    #     if choice == "continue":
-    #         break
-    #     if choice == "exit":
-    #         print("Exiting.")
-    #         return
-    #     print("Invalid input. Please type 'continue' or 'exit'.")
+    while True:
+        choice = input("Type 'continue' to proceed or 'exit' to quit: ").strip().lower()
+        if choice == "continue":
+            break
+        if choice == "exit":
+            print("Exiting.")
+            return
+        print("Invalid input. Please type 'continue' or 'exit'.")
 
     # Connect your agent to the MCP
     print("Connecting your agent to MCP:", mcp_url)
