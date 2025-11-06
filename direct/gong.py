@@ -36,8 +36,10 @@ response = actions.get_or_create_connected_account(
 
 auth_details = response.connected_account.authorization_details
 print(auth_details['static_auth']['username'])
-print(auth_details['static_auth']['password'])
 print(auth_details['static_auth']['domain'])
+
+#uncomment to see password
+#print(auth_details['static_auth']['password'])
 
 
 update_response = scalekit.actions.update_connected_account(
@@ -56,5 +58,6 @@ auth_details = update_response.connected_account.authorization_details
 
 print("Updated Auth Details:")
 print(auth_details['static_auth']['username'])
-print(auth_details['static_auth']['password'])
+#uncomment to see password
+#print(auth_details['static_auth']['password'])
 print(auth_details['static_auth']['domain'])
