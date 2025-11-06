@@ -1,5 +1,5 @@
 # ---- Scalekit SDK ----
-scalekit-sdk-python
+scalekit-sdk-python>=2.4.11
 
 # ---- LangChain Ecosystem (modular) ----
 langchain-core==0.3.75

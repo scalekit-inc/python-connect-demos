@@ -1,10 +1,10 @@
 import os
+import asyncio
 from dotenv import load_dotenv
 import scalekit.client
 from scalekit.actions.models.mcp_config import McpConfigConnectionToolMapping
-from scalekit.actions.types import (GetMcpInstanceAuthStateResponse)
 from langgraph.prebuilt import create_react_agent
-import asyncio
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 load_dotenv()
 
@@ -88,13 +88,6 @@ async def main():
 
     # Connect your agent to the MCP
     print("Connecting your agent to MCP:", mcp_url)
-
-    from importlib import import_module
-    try:
-        from langchain_mcp_adapters.client import MultiServerMCPClient
-    except ImportError:
-        mcp_mod = import_module("langchain_mcp_adapters.client")
-        MultiServerMCPClient = getattr(mcp_mod, "MultiServerMCPClient")
 
     client = MultiServerMCPClient(
         {
