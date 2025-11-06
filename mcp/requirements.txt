@@ -1,0 +1,21 @@
+# ---- Scalekit SDK ----
+scalekit-sdk-python>=2.4.11
+
+# ---- LangChain Ecosystem (modular) ----
+langchain-core==0.3.75
+langchain-community==0.3.30
+langchain-openai==0.3.30
+langchain-mcp-adapters==0.1.9
+langgraph==0.6.5
+
+# ---- OpenAI + Tokenizer ----
+openai>=1.53.0
+tiktoken>=0.8.0
+
+# ---- Environment + Async ----
+python-dotenv>=1.0.1
+asyncio>=3.4.3
+
+# ---- Utility dependencies ----
+tenacity>=8.2.3
+requests>=2.32.3
