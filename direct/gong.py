@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-connection_name = "gong-TIlQFr4z"
-identifier = "yourGongUserx"
+connection_name = "gong" # Get this from your scalekit dashboard
+identifier = "yourGongUser"
 
 
 scalekit = scalekit.client.ScalekitClient(
