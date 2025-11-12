@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-connection_name = "fathom-5gcNSEGm" # Get this from your scalekit dashboard
-identifier = "yourGongUser"
+connection_name = "fathom" # Get this from your scalekit dashboard
+identifier = "your_fathom_user"
 
 
 scalekit = scalekit.client.ScalekitClient(
@@ -36,16 +36,13 @@ auth_details = response.connected_account.authorization_details
 print(auth_details['static_auth']['api_key'])
 
 
-#uncomment to see password
-#print(auth_details['static_auth']['password'])
-
 
 update_response = scalekit.actions.update_connected_account(
     connection_name=connection_name,
     identifier=identifier,
     authorization_details= {
         "static_auth": {
-            "api_key": "New Fathom API Key how do ypu do?"
+            "api_key": "New Fathom API Key"
         }
     }
 )
