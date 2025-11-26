@@ -32,7 +32,11 @@ input("Press Enter after authorizing hubspot...")
 
 tools =  connect.langchain.get_tools(
     identifier=identifier,
-    providers = ["HUBSPOT"],
+    providers = [
+        "HUBSPOT",
+        "SLACK"
+    ],
+    page_size=100,
 )
 
 llm = ChatOpenAI(model="gpt-4o")
@@ -44,20 +48,7 @@ result = agent_executor.invoke(
     {
         "input":
             '''
-              1. Create a new contact with email "test@example.com", name "John Doe", company
-              "Test Corp", and phone "+1-555-123-4567"
-            
-              2. Get the contact details we just created using the contact ID from step 1
-            
-              3. Update that contact to add job title "Sales Manager" and set lifecycle stage to
-              "lead" .
-
-              4. Search the contact they you created. do a comprehensive sersch with all paramaters. create the contact if needed for complicatef flows            
-             
-            
-              Please execute these steps in order and show me the results from each operation.
-              Please provide the requests and responses for each step. please provide the request event when there is an error
-
-        ''',
+            List all my contacts in hubspot give me a summary. and send it to slack channel #connect
+           ''',
     }
 )

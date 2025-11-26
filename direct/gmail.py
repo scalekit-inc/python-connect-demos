@@ -12,15 +12,15 @@ scalekit = scalekit.client.ScalekitClient(
 )
 connect = scalekit.connect
 link_response = scalekit.connect.get_authorization_link(
-    connection_name="GMAIL",
-    identifier="default",
+    connection_name="gmail-XBeDCTyL",
+    identifier="demo-user-4",
 )
 print("click on the link to authorize gmail", link_response.link)
 input("Press Enter after authorizing gmail...")
 
 response = scalekit.connect.execute_tool(
     tool_name="gmail_fetch_mails",
-    identifier="avinash.kamath@scalekit.com",
+    identifier="demo-user-4",
     tool_input={
         "max_results" : 1
     },
