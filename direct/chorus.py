@@ -26,8 +26,8 @@ response = actions.get_or_create_connected_account(
     identifier=identifier,
     authorization_details={
         "static_auth": {
-            "username": "CHORUS_USERNAME",        # Clari Copilot API Key
-            "password": "CHORUS_PASSWORD"    # Clari Copilot API Password
+            "username": "CHORUS_USERNAME",     
+            "password": "CHORUS_PASSWORD"    
         }
     }
 )
@@ -44,7 +44,7 @@ update_response = actions.update_connected_account(
     identifier=identifier,
     authorization_details={
         "static_auth": {
-            "username": "UPDATED_CHORUS_USERNAME",        # Clari Copilot API Key
+            "username": "UPDATED_CHORUS_USERNAME",      
             "password": "UPDATED_CHORUS_PASSWORD" 
         }
     }
