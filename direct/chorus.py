@@ -20,29 +20,32 @@ scalekit = scalekit.client.ScalekitClient(
 actions = scalekit.actions
 
 
+# Create or get connected account using static auth
 response = actions.get_or_create_connected_account(
     connection_name=connection_name,
     identifier=identifier,
-    authorization_details= {
+    authorization_details={
         "static_auth": {
-           "api_key": "Chorus API Key"
+            "username": "CHORUS_USERNAME",        # Clari Copilot API Key
+            "password": "CHORUS_PASSWORD"    # Clari Copilot API Password
         }
     }
 )
 
-
-
 auth_details = response.connected_account.authorization_details
-print(auth_details['static_auth']['api_key'])
 
+print(auth_details["static_auth"]["username"])
+# uncomment if you want to see the secret
+# print(auth_details["static_auth"]["password"])
 
-
-update_response = scalekit.actions.update_connected_account(
+# Update credentials later if needed
+update_response = actions.update_connected_account(
     connection_name=connection_name,
     identifier=identifier,
-    authorization_details= {
+    authorization_details={
         "static_auth": {
-            "api_key": "New Chorus API Key"
+            "username": "UPDATED_CHORUS_USERNAME",        # Clari Copilot API Key
+            "password": "UPDATED_CHORUS_PASSWORD" 
         }
     }
 )
@@ -50,4 +53,6 @@ update_response = scalekit.actions.update_connected_account(
 auth_details = update_response.connected_account.authorization_details
 
 print("Updated Auth Details:")
-print(auth_details['static_auth']['api_key'])
+print(auth_details["static_auth"]["username"])
+# uncomment to see password
+# print(auth_details["static_auth"]["password"])
