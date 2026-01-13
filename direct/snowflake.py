@@ -2,11 +2,12 @@ import scalekit.client
 import os
 from dotenv import load_dotenv
 
+
 # Load environment variables
 load_dotenv()
 
 snowflake_connection="snowflake-oYGZ7pWJ"
-snowflake_identifier="teat-12321"
+snowflake_identifier="new-snowflake-user-001"
 
 
 scalekit = scalekit.client.ScalekitClient(
@@ -17,9 +18,22 @@ scalekit = scalekit.client.ScalekitClient(
 actions = scalekit.actions
 
 
+#create connected account with snowflake domain
+api_config = {
+    "domain": "bocwfvg-cf95611.snowflakecomputing.com",
+}
+
+actions.get_or_create_connected_account(
+    connection_name=snowflake_connection,
+    identifier=snowflake_identifier,
+    api_config=api_config
+)
+
+
 link_response = actions.get_authorization_link(
     connection_name=snowflake_connection,
-    identifier=snowflake_identifier)
+    identifier=snowflake_identifier
+)
 
 print("click on the link to authorize snowflake", link_response.link)
 input("Press Enter after authorizing snowflake...")
