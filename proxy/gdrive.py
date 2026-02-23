@@ -12,8 +12,9 @@ ENV_URL = os.getenv("ENV_URL")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
-CONNECTION_NAME = "googledrive-ci3BvjJC"
-IDENTIFIER = "claude"
+# your google drive connection name from scalekit and your user identifier
+CONNECTION_NAME = "<YOUR_CONNECTION_NAME>"
+IDENTIFIER = "<YOUR_USER_IDENTIFIER>"
 
 
 def main():
@@ -21,6 +22,7 @@ def main():
 
     # ── Upload ────────────────────────────────────────────────────────────────
 
+    #This file will be uploaded to google drive, you can change the file name and path as needed
     file_path = "test_sdk_document.pdf"
     file_name = "demo_upload.pdf"
 
