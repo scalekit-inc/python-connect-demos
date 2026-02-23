@@ -10,27 +10,25 @@ scalekit = scalekit.client.ScalekitClient(
     os.getenv("SCALEKIT_CLIENT_ID"),
     os.getenv("SCALEKIT_CLIENT_SECRET")
 )
-connect = scalekit.connect
+actions = scalekit.actions
 
 
-link_response = connect.get_authorization_link(
+link_response = actions.get_authorization_link(
     connection_name="SLACK",
-    identifier="avinash",
+    identifier="user_123234234", #vons user ID
 )
+
 
 print("click on the link to authorize slack", link_response.link)
 input("Press Enter after authorizing Slack...")
 
-response = scalekit.connect.execute_tool(
+response = actions.execute_tool(
     tool_name="slack_send_message",
-    identifier="avinash",
+    identifier="idento", #vons user ID
     tool_input={
         "channel": "#connect",
-        "text": "Hello from demo!",
+        "text": "Hello from Avinash via ScaleKit Connect!",
     },
 )
 
 print(response)
-
-
-

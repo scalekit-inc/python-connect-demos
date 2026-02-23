@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-connection_name = "salesforce" # Get this from your scalekit dashboard
-identifier = "your-unique-user-id"
+connection_name = "salesforce-connected" # Get this from your scalekit dashboard
+identifier = "avinash-123sadasd"
 
 
 scalekit = scalekit.client.ScalekitClient(
