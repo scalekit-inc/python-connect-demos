@@ -24,7 +24,7 @@ def export_via_custom_domain(client):
         identifier=IDENTIFIER,
         path=f"/presentation/d/{file_id}/export/pdf",
         method="GET",
-        headers={"x-proxy-domain": "docs.google.com"},
+        headers={"x-proxy-domain": "docs.google.com"},  # use custom domain for proxy. only whitelisted domains are allowed
     )
 
     print(f"Status: {export_response.status_code}")
