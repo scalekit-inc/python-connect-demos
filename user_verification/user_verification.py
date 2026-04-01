@@ -85,7 +85,7 @@ def wait_for_verify_callback():
             auth_request_id=auth_request_id,
             identifier=USER_IDENTIFIER,
         )
-        response = verify_response.post_user_verify_redirect_url or ENV_URL
+        redirect_url = response.post_user_verify_redirect_url or ENV_URL
         print(f"Redirect user to: {response.post_user_verify_redirect_url}")
 
         start_response("302 Found", [("Location", redirect_url), ("Content-Length", "0")])
