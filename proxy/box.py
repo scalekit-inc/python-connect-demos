@@ -1,16 +1,16 @@
 """
-Tableau binary export examples using the Scalekit proxy.
+Box file upload and download examples using the Scalekit proxy.
 
-Binary responses (PNG images, PDF files, Excel files, .twbx workbooks, .tdsx
-data sources) must be downloaded through actions.request() — the SDK's
-execute_tool() only handles JSON responses.
+Box file uploads go to upload.box.com (not api.box.com) and require
+multipart form data — use actions.request() for both upload and download.
 
 Run:
-    python tableau.py
+    python box.py
 """
 
+import json
+import mimetypes
 import os
-import time
 
 from dotenv import load_dotenv
 import scalekit.client as scalekit_sdk
@@ -21,7 +21,7 @@ ENV_URL = os.getenv("ENV_URL")
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
-# Your Tableau connection name from the Scalekit dashboard and your user ID
+# Your Box connection name from the Scalekit dashboard and your user ID
 CONNECTION_NAME = "<YOUR_CONNECTION_NAME>"
 IDENTIFIER = "<YOUR_USER_IDENTIFIER>"
 
@@ -30,156 +30,104 @@ def main():
     client = scalekit_sdk.ScalekitClient(ENV_URL, CLIENT_ID, CLIENT_SECRET)
     actions = client.actions
 
-    # ── Step 1: Get connected account ────────────────────────────────────────
+    # ── Upload a file ─────────────────────────────────────────────────────────
+    # Box uploads go to upload.box.com, not api.box.com.
+    # Scalekit injects the Authorization: Bearer token automatically.
 
-    connected_account = actions.get_connected_account(
+    file_path = "test_file.txt"
+    file_name = "demo_upload.txt"
+
+    # Create a test file if it doesn't exist
+    if not os.path.exists(file_path):
+        with open(file_path, "w") as f:
+            f.write("Hello from Scalekit Box proxy example!")
+
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+
+    mime_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+
+    print(f"Uploading {file_name} ({len(file_bytes):,} bytes)...")
+
+    # Box requires a JSON attributes part and a file part in multipart.
+    # Parent folder ID "0" is the root folder.
+    attributes = json.dumps({"name": file_name, "parent": {"id": "0"}})
+
+    upload_response = actions.request(
         connection_name=CONNECTION_NAME,
         identifier=IDENTIFIER,
-    ).connected_account
-
-    # ── Step 2: Get site ID ───────────────────────────────────────────────────
-    # The site_id (LUID) is required for every Tableau REST API call.
-    # Call tableau_session_get once and cache it for the session.
-
-    session = actions.execute_tool(
-        tool_name="tableau_session_get",
-        connected_account_id=connected_account.id,
-        tool_input={},
+        path="/api/2.0/files/content",
+        method="POST",
+        form_data={
+            "attributes": (None, attributes, "application/json"),
+            "file": (file_name, file_bytes, mime_type),
+        },
+        base_url_override="https://upload.box.com",
     )
-    site_id = session["session"]["site"]["id"]
-    print(f"Site ID: {site_id}")
 
-    # ── Step 3: Discover workbooks and views ──────────────────────────────────
+    if upload_response.status_code not in (200, 201):
+        print(f"Upload failed: {upload_response.status_code} {upload_response.text}")
+        return
 
-    workbooks = actions.execute_tool(
-        tool_name="tableau_workbooks_list",
-        connected_account_id=connected_account.id,
-        tool_input={"site_id": site_id},
-    )
-    workbook = workbooks["workbooks"]["workbook"][0]
-    workbook_id = workbook["id"]
-    print(f"Workbook: {workbook['name']} (ID: {workbook_id})")
+    file_metadata = upload_response.json()
+    file_id = file_metadata["entries"][0]["id"]
+    print(f"Uploaded. File ID: {file_id}")
 
-    views = actions.execute_tool(
-        tool_name="tableau_list_views",
-        connected_account_id=connected_account.id,
-        tool_input={"site_id": site_id, "workbook_id": workbook_id},
-    )
-    view = views["views"]["view"][0]
-    view_id = view["id"]
-    print(f"View: {view['name']} (ID: {view_id})")
+    # ── Download a file ───────────────────────────────────────────────────────
 
-    # ── Export: PNG image ─────────────────────────────────────────────────────
-    # Scalekit automatically injects the X-Tableau-Auth session token header.
+    output_path = "downloaded_file.txt"
+    print(f"\nDownloading file {file_id}...")
 
-    print("\nDownloading view as PNG...")
-    response = actions.request(
+    download_response = actions.request(
         connection_name=CONNECTION_NAME,
         identifier=IDENTIFIER,
-        path=f"/api/3.28/sites/{site_id}/views/{view_id}/image",
-        method="GET",
-        params={"resolution": "high"},  # optional: 'high' or 'standard'
-    )
-    with open("dashboard.png", "wb") as f:
-        f.write(response.content)
-    print(f"Saved dashboard.png ({len(response.content):,} bytes)")
-
-    # ── Export: PDF ───────────────────────────────────────────────────────────
-
-    print("\nDownloading view as PDF...")
-    response = actions.request(
-        connection_name=CONNECTION_NAME,
-        identifier=IDENTIFIER,
-        path=f"/api/3.28/sites/{site_id}/views/{view_id}/pdf",
-        method="GET",
-        params={"type": "a4", "orientation": "landscape"},
-    )
-    with open("dashboard.pdf", "wb") as f:
-        f.write(response.content)
-    print(f"Saved dashboard.pdf ({len(response.content):,} bytes)")
-
-    # ── Export: Excel (crosstab) ──────────────────────────────────────────────
-
-    print("\nDownloading view as Excel...")
-    response = actions.request(
-        connection_name=CONNECTION_NAME,
-        identifier=IDENTIFIER,
-        path=f"/api/3.28/sites/{site_id}/views/{view_id}/crosstab/excel",
+        path=f"/api/2.0/files/{file_id}/content",
         method="GET",
     )
-    with open("dashboard.xlsx", "wb") as f:
-        f.write(response.content)
-    print(f"Saved dashboard.xlsx ({len(response.content):,} bytes)")
 
-    # ── Download: Full workbook (.twbx) ───────────────────────────────────────
+    with open(output_path, "wb") as f:
+        f.write(download_response.content)
+    print(f"Downloaded. Saved to: {output_path} ({len(download_response.content):,} bytes)")
 
-    print("\nDownloading full workbook (.twbx)...")
-    response = actions.request(
+    # ── Get file metadata ─────────────────────────────────────────────────────
+
+    print(f"\nFetching metadata for file {file_id}...")
+    meta_response = actions.request(
         connection_name=CONNECTION_NAME,
         identifier=IDENTIFIER,
-        path=f"/api/3.28/sites/{site_id}/workbooks/{workbook_id}/content",
+        path=f"/api/2.0/files/{file_id}",
         method="GET",
     )
-    with open("workbook.twbx", "wb") as f:
-        f.write(response.content)
-    print(f"Saved workbook.twbx ({len(response.content):,} bytes)")
+    meta = meta_response.json()
+    print(f"Name: {meta['name']}, Size: {meta['size']} bytes, Modified: {meta['modified_at']}")
 
-    # ── Trigger a data source refresh and poll the job ────────────────────────
-    # Refresh triggering and job polling use execute_tool (JSON responses).
+    # ── List root folder contents ─────────────────────────────────────────────
 
-    datasources = actions.execute_tool(
-        tool_name="tableau_datasources_list",
-        connected_account_id=connected_account.id,
-        tool_input={"site_id": site_id},
-    )
-    datasource = datasources["datasources"]["datasource"][0]
-    datasource_id = datasource["id"]
-    print(f"\nDatasource: {datasource['name']} (ID: {datasource_id})")
-
-    print("Triggering extract refresh...")
-    refresh = actions.execute_tool(
-        tool_name="tableau_datasource_refresh",
-        connected_account_id=connected_account.id,
-        tool_input={"site_id": site_id, "datasource_id": datasource_id},
-    )
-    job_id = refresh["job"]["id"]
-    print(f"Job ID: {job_id}")
-
-    while True:
-        time.sleep(10)
-        job = actions.execute_tool(
-            tool_name="tableau_job_get",
-            connected_account_id=connected_account.id,
-            tool_input={"site_id": site_id, "job_id": job_id},
-        )
-        status = job["job"]["status"]
-        print(f"  Status: {status}")
-        if status != "InProgress":
-            break
-    print(f"Refresh completed: {status}")
-
-    # ── Download: Data source package (.tdsx) ─────────────────────────────────
-
-    print("\nDownloading data source (.tdsx)...")
-    response = actions.request(
+    print("\nListing root folder contents...")
+    folder_response = actions.request(
         connection_name=CONNECTION_NAME,
         identifier=IDENTIFIER,
-        path=f"/api/3.28/sites/{site_id}/datasources/{datasource_id}/content",
+        path="/api/2.0/folders/0/items",
         method="GET",
+        params={"limit": 10},
     )
-    with open("datasource.tdsx", "wb") as f:
-        f.write(response.content)
-    print(f"Saved datasource.tdsx ({len(response.content):,} bytes)")
+    items = folder_response.json()
+    for entry in items.get("entries", []):
+        print(f"  [{entry['type']}] {entry['name']} (ID: {entry['id']})")
 
-    # ── Sign out ──────────────────────────────────────────────────────────────
-    # Invalidate the session token when the agent session ends.
+    # ── Delete the uploaded file ──────────────────────────────────────────────
 
-    actions.execute_tool(
-        tool_name="tableau_auth_signout",
-        connected_account_id=connected_account.id,
-        tool_input={},
+    print(f"\nDeleting file {file_id}...")
+    delete_response = actions.request(
+        connection_name=CONNECTION_NAME,
+        identifier=IDENTIFIER,
+        path=f"/api/2.0/files/{file_id}",
+        method="DELETE",
     )
-    print("\nSigned out. Session token invalidated.")
+    if delete_response.status_code == 204:
+        print("Deleted successfully.")
+    else:
+        print(f"Delete returned: {delete_response.status_code}")
 
 
 if __name__ == "__main__":
