@@ -2,7 +2,8 @@
 Box file upload and download examples using the Scalekit proxy.
 
 Box file uploads go to upload.box.com (not api.box.com) and require
-multipart form data — use actions.request() for both upload and download.
+multipart form data — pass files= as a kwarg so requests sets the
+correct Content-Type boundary automatically.
 
 Run:
     python box.py
@@ -11,19 +12,20 @@ Run:
 import json
 import mimetypes
 import os
+import time
 
 from dotenv import load_dotenv
 import scalekit.client as scalekit_sdk
 
 load_dotenv()
 
-ENV_URL = os.getenv("ENV_URL")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+ENV_URL = os.getenv("SCALEKIT_ENV_URL")
+CLIENT_ID = os.getenv("SCALEKIT_CLIENT_ID")
+CLIENT_SECRET = os.getenv("SCALEKIT_CLIENT_SECRET")
 
 # Your Box connection name from the Scalekit dashboard and your user ID
 CONNECTION_NAME = "<YOUR_CONNECTION_NAME>"
-IDENTIFIER = "<YOUR_USER_IDENTIFIER>"
+IDENTIFIER = "<YOUR_USER"
 
 
 def main():
@@ -35,12 +37,10 @@ def main():
     # Scalekit injects the Authorization: Bearer token automatically.
 
     file_path = "test_file.txt"
-    file_name = "demo_upload.txt"
+    file_name = f"demo_upload_test{int(time.time())}.txt"
 
-    # Create a test file if it doesn't exist
-    if not os.path.exists(file_path):
-        with open(file_path, "w") as f:
-            f.write("Hello from Scalekit Box proxy example!")
+    with open(file_path, "w") as f:
+        f.write("Hello from Scalekit SDK demo!")
 
     with open(file_path, "rb") as f:
         file_bytes = f.read()
@@ -58,22 +58,22 @@ def main():
         identifier=IDENTIFIER,
         path="/api/2.0/files/content",
         method="POST",
-        form_data={
+        headers={"x-proxy-domain": "upload.box.com"},
+        files={
             "attributes": (None, attributes, "application/json"),
             "file": (file_name, file_bytes, mime_type),
         },
-        base_url_override="https://upload.box.com",
     )
 
     if upload_response.status_code not in (200, 201):
         print(f"Upload failed: {upload_response.status_code} {upload_response.text}")
         return
 
-    file_metadata = upload_response.json()
-    file_id = file_metadata["entries"][0]["id"]
+    file_id = upload_response.json()["entries"][0]["id"]
     print(f"Uploaded. File ID: {file_id}")
 
     # ── Download a file ───────────────────────────────────────────────────────
+    # Box returns a 302 redirect to a pre-signed CDN URL — requests follows it automatically.
 
     output_path = "downloaded_file.txt"
     print(f"\nDownloading file {file_id}...")
@@ -81,53 +81,14 @@ def main():
     download_response = actions.request(
         connection_name=CONNECTION_NAME,
         identifier=IDENTIFIER,
-        path=f"/api/2.0/files/{file_id}/content",
-        method="GET",
+        path=f"/2.0/files/{file_id}/content",
+        method="GET"
     )
 
     with open(output_path, "wb") as f:
         f.write(download_response.content)
-    print(f"Downloaded. Saved to: {output_path} ({len(download_response.content):,} bytes)")
+    print(f"Downloaded to: {output_path} ({len(download_response.content):,} bytes)")
 
-    # ── Get file metadata ─────────────────────────────────────────────────────
-
-    print(f"\nFetching metadata for file {file_id}...")
-    meta_response = actions.request(
-        connection_name=CONNECTION_NAME,
-        identifier=IDENTIFIER,
-        path=f"/api/2.0/files/{file_id}",
-        method="GET",
-    )
-    meta = meta_response.json()
-    print(f"Name: {meta['name']}, Size: {meta['size']} bytes, Modified: {meta['modified_at']}")
-
-    # ── List root folder contents ─────────────────────────────────────────────
-
-    print("\nListing root folder contents...")
-    folder_response = actions.request(
-        connection_name=CONNECTION_NAME,
-        identifier=IDENTIFIER,
-        path="/api/2.0/folders/0/items",
-        method="GET",
-        params={"limit": 10},
-    )
-    items = folder_response.json()
-    for entry in items.get("entries", []):
-        print(f"  [{entry['type']}] {entry['name']} (ID: {entry['id']})")
-
-    # ── Delete the uploaded file ──────────────────────────────────────────────
-
-    print(f"\nDeleting file {file_id}...")
-    delete_response = actions.request(
-        connection_name=CONNECTION_NAME,
-        identifier=IDENTIFIER,
-        path=f"/api/2.0/files/{file_id}",
-        method="DELETE",
-    )
-    if delete_response.status_code == 204:
-        print("Deleted successfully.")
-    else:
-        print(f"Delete returned: {delete_response.status_code}")
 
 
 if __name__ == "__main__":
