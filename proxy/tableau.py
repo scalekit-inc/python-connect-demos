@@ -50,7 +50,7 @@ def main():
         connected_account_id=connected_account.id,
         tool_input={},
     )
-    site_id = session["session"]["site"]["id"]
+    site_id = session.data["session"]["site"]["id"]
     print(f"Site ID: {site_id}")
 
     # ── Discover IDs (optional — uncomment to find VIEW_ID / WORKBOOK_ID) ────
