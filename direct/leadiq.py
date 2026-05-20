@@ -24,7 +24,6 @@ actions = scalekit.actions
 
 CONNECTION_NAME = "leadiq"
 IDENTIFIER = "user_123"
-LEADIQ_API_KEY = os.getenv("LEADIQ_API_KEY", "<YOUR_LEADIQ_API_KEY>")
 
 
 def main():
@@ -34,11 +33,6 @@ def main():
     response = actions.get_or_create_connected_account(
         connection_name=CONNECTION_NAME,
         identifier=IDENTIFIER,
-        authorization_details={
-            "static_auth": {
-                "username": LEADIQ_API_KEY,
-            }
-        },
     )
     account = response.connected_account
     print(f"Connected account: {account.id} | Status: {account.status}")
