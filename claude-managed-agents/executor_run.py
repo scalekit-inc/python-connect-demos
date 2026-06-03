@@ -44,6 +44,25 @@ print("Running background claude managed agent...\n")
 print(f"  Agent ID   : {agent_id}")
 print(f"  Identifier : {identifier}\n")
 
+print("Checking connected account status...")
+accounts_response = sk_client.actions.mcp.list_mcp_connected_accounts(
+    config_id=config_id,
+    identifier=identifier,
+    include_auth_link=False,
+)
+inactive = [
+    a.connection_name
+    for a in accounts_response.connected_accounts
+    if a.connected_account_status.lower() != "active"
+]
+if inactive:
+    print(f"\nConnected accounts for identifier '{identifier}' are not in active state:")
+    for name in inactive:
+        print(f"  ✗ {name}")
+    print("\nPlease run executor_setup.py to authorize the required connections.")
+    sys.exit(1)
+print("All connected accounts are active.\n")
+
 print("Minting token using Scalekit and storing in CMA user vault...")
 
 configs_response = sk_client.actions.list_configs(filter_id=config_id)

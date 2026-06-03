@@ -29,6 +29,19 @@ def wait_for_keypress():
     print()
 
 
+def read_single_key(prompt):
+    print(prompt, end="", flush=True)
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        key = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old)
+    print(key)
+    return key
+
+
 if not os.path.exists("datastore/config_id.txt"):
     print("ERROR: config_id.txt not found. Run builder.py first.")
     sys.exit(1)
@@ -48,19 +61,25 @@ print(f"  Identifier : {identifier}\n")
 accounts_response = sk_client.actions.mcp.list_mcp_connected_accounts(
     config_id=config_id,
     identifier=identifier,
-    include_auth_link=True,
+    include_auth_link=False,
 )
 
 for account in accounts_response.connected_accounts:
-    print(f"  Connection : {account.connection_name}")
-    print(f"  Account ID : {account.connected_account_id or '(none yet)'}")
-    print(f"  Status     : {account.connected_account_status}")
-    print(f"  Auth Link  : {account.authentication_link}")
-    print()
+    if not account.connected_account_id:
+        print(f"  Connected account is not present for: {account.connection_name}")
+        key = read_single_key(f"  Would you like to authorize for {account.connection_name}? (y/n) ")
+        if key.lower() == "y":
+            auth_response = sk_client.actions.get_authorization_link(
+                identifier=identifier,
+                connection_name=account.connection_name,
+            )
+            print(f"\n  Auth Link  : {auth_response.link}")
+            print("  Please complete authorization in your browser.")
+            wait_for_keypress()
+    else:
+        print(f"  ✓ {account.connection_name} — already connected ({account.connected_account_status})")
 
-print("Click each link above to complete authorization, then come back here.")
-
-wait_for_keypress()
+print()
 
 accounts_response = sk_client.actions.mcp.list_mcp_connected_accounts(
     config_id=config_id,
