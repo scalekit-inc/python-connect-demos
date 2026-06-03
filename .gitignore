@@ -1,5 +1,6 @@
 .env
 .idea/
+datastore/
 __pycache__/
 *.pyc
 *.pyo
