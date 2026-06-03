@@ -1,0 +1,13 @@
+[project]
+name = "claude-managed-agents-demo"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.104.1",
+    "python-dotenv>=1.1.1",
+    "scalekit-sdk-python>=2.10.1.1",
+]
+
+[tool.uv.sources]
+scalekit-sdk-python = { path = "/Users/akshayparihar/Documents/repos/scalekit-sdk-python", editable = true }
