@@ -6,8 +6,5 @@ requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.104.1",
     "python-dotenv>=1.1.1",
-    "scalekit-sdk-python>=2.10.1.1",
+    "scalekit-sdk-python>=2.11.0",
 ]
-
-[tool.uv.sources]
-scalekit-sdk-python = { path = "/Users/akshayparihar/Documents/repos/scalekit-sdk-python", editable = true }

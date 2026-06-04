@@ -247,7 +247,7 @@ dependencies = [
 requires-dist = [
     { name = "anthropic", specifier = ">=0.104.1" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
-    { name = "scalekit-sdk-python", editable = "../../scalekit-sdk-python" },
+    { name = "scalekit-sdk-python", specifier = ">=2.11.0" },
 ]
 
 [[package]]
@@ -1065,8 +1065,8 @@ wheels = [
 
 [[package]]
 name = "scalekit-sdk-python"
-version = "2.10.1.1"
-source = { editable = "../../scalekit-sdk-python" }
+version = "2.11.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cffi" },
     { name = "cryptography" },
@@ -1085,25 +1085,9 @@ dependencies = [
     { name = "requests" },
     { name = "setuptools" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "cffi", specifier = ">=1.15.1" },
-    { name = "cryptography", specifier = "==46.0.6,<47" },
-    { name = "deprecation", specifier = ">=2.1.0" },
-    { name = "faker", specifier = "~=25.8.0" },
-    { name = "google", specifier = ">=3.0" },
-    { name = "googleapis-common-protos", specifier = ">=1.72.0" },
-    { name = "grpcio", specifier = ">=1.64.1" },
-    { name = "grpcio-status", specifier = ">=1.64,<1.67" },
-    { name = "mcp", specifier = ">=1.23.0" },
-    { name = "protobuf", specifier = ">=5.29.5,<7.0.0" },
-    { name = "protoc-gen-openapiv2", specifier = ">=0.0.1" },
-    { name = "pydantic", specifier = ">=2.10.6" },
-    { name = "pyjwt", specifier = ">=2.12.0" },
-    { name = "python-dotenv", specifier = "~=1.1.1" },
-    { name = "requests", specifier = ">=2.32.3" },
-    { name = "setuptools", specifier = ">=78.1.1,<81.0" },
+sdist = { url = "https://files.pythonhosted.org/packages/92/7d/7c58752382b6cb5d38cef20c2946827e90dae40077a53684f89a3042b9ab/scalekit_sdk_python-2.11.0.tar.gz", hash = "sha256:a43ac4bd36dfc1635a914374e7096ddb1e69f5a2cfb3ab900c76aabc57deeb8a", size = 538117, upload-time = "2026-06-04T05:38:37.397Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/33/eb6ed0963815327d3e117fa0bf5bb4ca8dc137dcd67d151223a577700045/scalekit_sdk_python-2.11.0-py3-none-any.whl", hash = "sha256:1a0d0e19506434dc81fb9a80d0f8af7f34138bce572e7714466fea66ba2d0ddb", size = 574298, upload-time = "2026-06-04T05:38:35.865Z" },
 ]
 
 [[package]]

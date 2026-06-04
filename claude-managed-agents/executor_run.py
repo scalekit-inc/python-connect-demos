@@ -65,7 +65,7 @@ print("All connected accounts are active.\n")
 
 print("Minting token using Scalekit and storing in CMA user vault...")
 
-configs_response = sk_client.actions.list_configs(filter_id=config_id)
+configs_response = sk_client.actions.mcp.list_configs(filter_id=config_id)
 mcp_server_url = configs_response.configs[0].mcp_server_url
 
 token_response = sk_client.actions.mcp.create_session_token(

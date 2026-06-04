@@ -69,7 +69,7 @@ wait_for_keypress()
 gmail_conn = next(c for c in connections if "gmail" in c.provider_key.lower())
 gcal_conn = next(c for c in connections if "calendar" in c.provider_key.lower())
 
-config_response = sk_client.actions.create_config(
+config_response = sk_client.actions.mcp.create_config(
     name="email-calendar-demo",
     connection_tool_mappings=[
         McpConfigConnectionToolMapping(
@@ -90,7 +90,7 @@ with open("datastore/config_id.txt", "w") as f:
     f.write(config_id)
 
 print(f"MCP Server URL : {mcp_server_url}")
-print(f"Config ID      : {config_id}\n")
+print(f"MCP Config ID      : {config_id}\n")
 print("Your virtual MCP server is ready to be attached to an agent.")
 
 wait_for_keypress()
@@ -138,7 +138,7 @@ print(f"  ID        : {agent.id}")
 print(f"  Version   : {agent.version}")
 print(f"  Model     : {agent.model}")
 print(f"  MCP URL   : {mcp_server_url}")
-print(f"  Config ID : {config_id}")
+print(f"  MCP Config ID : {config_id}")
 print(f"\nAgent ID saved to datastore/agent_id.txt")
-print(f"Config ID saved to datastore/config_id.txt")
+print(f"MCP Config ID saved to datastore/config_id.txt")
 print("\nAgent Builder flow complete.")

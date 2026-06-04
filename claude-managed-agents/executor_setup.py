@@ -55,7 +55,7 @@ with open("datastore/identifier.txt", "w") as f:
 print("End-user setup flow")
 print("This is a one-time step — analogous to an Integrations screen in a web app.")
 print("The end-user connects their accounts once, and all future agent sessions use those connections.\n")
-print(f"  Config ID  : {config_id}")
+print(f"  MCP Config ID  : {config_id}")
 print(f"  Identifier : {identifier}\n")
 
 accounts_response = sk_client.actions.mcp.list_mcp_connected_accounts(
