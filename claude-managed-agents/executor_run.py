@@ -82,8 +82,8 @@ if os.path.exists("datastore/vault_id.txt") and os.path.exists("datastore/creden
         credential_id,
         vault_id=vault_id,
         auth={
-            "type": "mcp_oauth",
-            "access_token": token,
+            "type": "static_bearer",
+            "token": token,
         },
     )
 else:
@@ -94,9 +94,9 @@ else:
         vault_id,
         display_name=f"email-meeting-{identifier[:8]}-credential",
         auth={
-            "type": "mcp_oauth",
+            "type": "static_bearer",
             "mcp_server_url": mcp_server_url,
-            "access_token": token,
+            "token": token,
         },
     )
     credential_id = credential.id
