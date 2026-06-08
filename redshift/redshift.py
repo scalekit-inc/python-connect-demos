@@ -26,6 +26,8 @@ connected_account = connect.get_or_create_connected_account(
 
 print("Connected account:", connected_account)
 
+
+# Update the connected account with the correct connection details after the customer has set up the connection in their AWS account and provided the necessary details to you.
 connected_account = scalekit.actions.update_connected_account(
     connection_name=connection_name,
     identifier=identifier,
