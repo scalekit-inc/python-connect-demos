@@ -8,6 +8,7 @@ a single script.
 |---|---|---|
 | `1_oauth_pylon_provider.py` | OAuth 2.1 | Creates a Pylon MCP connector and prints the authorization URL for the user to complete |
 | `2_bearer_apify_provider.py` | Bearer token | Creates an Apify MCP connector and lists available tools immediately after account creation |
+| `3_apikey_context7_provider.py` | API Key | Creates a Context7 MCP connector and queries library docs immediately after account creation |
 
 ---
 
@@ -28,10 +29,16 @@ SCALEKIT_CLIENT_ID=skc_...
 SCALEKIT_CLIENT_SECRET=sks_...
 ```
 
-For `apify_bearer_provider.py` also set:
+For `2_bearer_apify_provider.py` also set:
 
 ```
 APIFY_API_TOKEN=apify_api_...
+```
+
+For `3_apikey_context7_provider.py` also set:
+
+```
+CONTEXT7_API_KEY=your_context7_api_key_here
 ```
 
 ---
@@ -54,11 +61,20 @@ Once authorized, the connected account becomes active and tools are available vi
 
 ### Apify Bearer Token MCP connector
 
-Before running, set your user identifier in the script:
-
 ```bash
 python 2_bearer_apify_provider.py
 ```
 
 Bearer auth requires no browser flow — the token is active immediately, so the script proceeds
 straight to listing available tools after creating the connected account.
+
+---
+
+### Context7 API Key MCP connector
+
+```bash
+python 3_apikey_context7_provider.py
+```
+
+API key auth requires no browser flow — the key is active immediately. The script lists available
+tools then queries Next.js docs via `c-customcontext7mcp_query_docs`.
