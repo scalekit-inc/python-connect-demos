@@ -4,7 +4,6 @@ import uuid
 
 from dotenv import load_dotenv
 from scalekit import ScalekitClient
-from scalekit.actions.types import AuthField, AuthPattern, CreateCustomProviderRequest, DeleteCustomProviderRequest
 from scalekit.v1.connections.connections_pb2 import ConnectionType, CreateConnection, DeleteEnvironmentConnectionRequest, Flags
 from scalekit.v1.tools.tools_pb2 import ScopedToolFilter
 
@@ -19,6 +18,14 @@ CONTEXT7_API_KEY = os.getenv("CONTEXT7_API_KEY")
 USER_IDENTIFIER = os.getenv("USER_IDENTIFIER")
 
 
+class _RawPattern:
+    def __init__(self, **data):
+        self._data = data
+
+    def to_dict(self):
+        return self._data
+
+
 def main():
     if not CONTEXT7_API_KEY:
         print("Missing environment variable: CONTEXT7_API_KEY. Check your .env file.")
@@ -30,35 +37,28 @@ def main():
 
     print("Creating custom API_KEY provider for Custom Context7 MCP...")
     try:
-        provider_response = sc.actions.providers.create_custom_provider(
-            CreateCustomProviderRequest(
-                display_name="Custom Context7 MCP",
-                description="Context7 integration via MCP",
-                proxy_url="https://mcp.context7.com/mcp",
-                proxy_enabled=True,
-                auth_patterns=[
-                    AuthPattern(
-                        type="API_KEY",
-                        display_name="API Key",
-                        description="Authenticate with a Context7 API key.",
-                        is_mcp=True,
-                        fields=[
-                            AuthField(
-                                field_name="api_key",
-                                label="API Key",
-                                input_type="password",
-                            )
-                        ],
-                    )
-                ],
-                metadata={"tenant_id": str(uuid.uuid4())},
-            )
+        create_result = sc.actions._providers_client.create_custom_provider(
+            display_name="Custom Context7 MCP",
+            description="Context7 integration via MCP",
+            proxy_url="https://mcp.context7.com/mcp",
+            proxy_enabled=True,
+            auth_patterns=[
+                _RawPattern(
+                    type="API_KEY",
+                    display_name="API Key",
+                    description="Authenticate with a Context7 API key.",
+                    is_mcp=True,
+                    fields=[{"field_name": "api_key", "label": "API Key", "input_type": "password"}],
+                    auth_header_key_override="CONTEXT7_API_KEY",
+                )
+            ],
+            metadata={"tenant_id": str(uuid.uuid4())},
         )
     except Exception as e:
         print(f"Failed to create provider: {e}")
         sys.exit(1)
 
-    provider = provider_response.provider
+    provider = create_result[0].provider
     print(f"Provider created: identifier={provider.identifier}, name={provider.display_name}")
 
     # ── Create connection ─────────────────────────────────────────────────────
@@ -126,10 +126,10 @@ def main():
 
     # ── Execute tool ──────────────────────────────────────────────────────────
 
-    print("\nExecuting tool: c-customcontext7mcp_query_docs...")
+    print("\nExecuting tool: c-customcontext7mcp_query-docs...")
     try:
         response = sc.actions.execute_tool(
-            tool_name="c-customcontext7mcp_query_docs",
+            tool_name="c-customcontext7mcp_query-docs",
             identifier=USER_IDENTIFIER,
             connection_name=connection_name,
             tool_input={
@@ -175,8 +175,8 @@ def cleanup(sc, connection_id, connection_name, provider_identifier):
 
     print("  Deleting custom provider...")
     try:
-        sc.actions.providers.delete_custom_provider(
-            DeleteCustomProviderRequest(identifier=provider_identifier),
+        sc.actions._providers_client.delete_custom_provider(
+            identifier=provider_identifier,
         )
         print("  Provider deleted.")
     except Exception as e:
