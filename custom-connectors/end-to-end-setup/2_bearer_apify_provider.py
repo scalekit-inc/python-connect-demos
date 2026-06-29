@@ -1,5 +1,6 @@
 import os
 import sys
+import uuid
 
 from dotenv import load_dotenv
 from scalekit import ScalekitClient
@@ -15,8 +16,7 @@ ENV_URL = os.getenv("SCALEKIT_ENV_URL")
 CLIENT_ID = os.getenv("SCALEKIT_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SCALEKIT_CLIENT_SECRET")
 APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN")
-
-USER_IDENTIFIER = "<YOUR_USER_IDENTIFIER>"
+USER_IDENTIFIER = os.getenv("USER_IDENTIFIER")
 
 
 def main():
@@ -51,6 +51,7 @@ def main():
                         ],
                     )
                 ],
+                metadata={"tenant_id": str(uuid.uuid4())},
             )
         )
     except Exception as e:
