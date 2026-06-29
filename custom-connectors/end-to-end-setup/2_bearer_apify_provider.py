@@ -160,6 +160,7 @@ def cleanup(sc, connection_id, connection_name, provider_identifier):
     except Exception as e:
         print(f"  Failed to delete connected account: {e}")
 
+    # For connection update/delete refer to: https://docs.scalekit.com/sdks/python/reference
     print("  Deleting app connection...")
     try:
         sc.connection.core_client.grpc_exec(
