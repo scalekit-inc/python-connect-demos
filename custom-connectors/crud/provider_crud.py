@@ -35,6 +35,7 @@ def main():
                 description="Example integration via MCP",
                 proxy_url="https://mcp.example.com/mcp",
                 proxy_enabled=True,
+                icon_src="https://example.com/icon.png",
                 auth_patterns=[
                     AuthPattern(
                         type="OAUTH",
@@ -86,6 +87,7 @@ def main():
                 display_name=fetched.display_name,
                 proxy_url=fetched.proxy_url,
                 description="Updated description via MCP",
+                icon_src="https://example.com/new-icon.png",
                 auth_patterns=fetched.auth_patterns,
                 metadata=updated_metadata,
             )
