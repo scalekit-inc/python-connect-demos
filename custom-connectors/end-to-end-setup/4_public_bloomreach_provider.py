@@ -4,7 +4,7 @@ import uuid
 
 from dotenv import load_dotenv
 from scalekit import ScalekitClient
-from scalekit.actions.types import AuthPattern
+from scalekit.actions.types import AuthPattern, CreateCustomProviderRequest, DeleteCustomProviderRequest
 from scalekit.v1.connections.connections_pb2 import ConnectionType, CreateConnection, DeleteEnvironmentConnectionRequest, Flags
 from scalekit.v1.tools.tools_pb2 import ScopedToolFilter
 
@@ -25,27 +25,29 @@ def main():
 
     print("Creating custom NO_AUTH provider for Public Bloomreach MCP...")
     try:
-        create_result = sc.actions._providers_client.create_custom_provider(
-            display_name="Public Bloomreach MCP",
-            description="Bloomreach documentation via MCP",
-            proxy_url="https://documentation.bloomreach.com/mcp",
-            proxy_enabled=True,
-            auth_patterns=[
-                AuthPattern(
-                    type="NO_AUTH",
-                    display_name="No Auth",
-                    description="Public server — no credentials required.",
-                    is_mcp=True,
-                    fields=[],
-                )
-            ],
-            metadata={"tenant_id": str(uuid.uuid4())},
+        create_response = sc.actions.providers.create_custom_provider(
+            CreateCustomProviderRequest(
+                display_name="Public Bloomreach MCP",
+                description="Bloomreach documentation via MCP",
+                proxy_url="https://documentation.bloomreach.com/mcp",
+                proxy_enabled=True,
+                auth_patterns=[
+                    AuthPattern(
+                        type="NO_AUTH",
+                        display_name="No Auth",
+                        description="Public server — no credentials required.",
+                        is_mcp=True,
+                        fields=[],
+                    )
+                ],
+                metadata={"tenant_id": str(uuid.uuid4())},
+            )
         )
     except Exception as e:
         print(f"Failed to create provider: {e}")
         sys.exit(1)
 
-    provider = create_result[0].provider
+    provider = create_response.provider
     print(f"Provider created: identifier={provider.identifier}, name={provider.display_name}")
 
     # ── Create connection ─────────────────────────────────────────────────────
@@ -155,8 +157,8 @@ def cleanup(sc, connection_id, connection_name, provider_identifier):
 
     print("  Deleting custom provider...")
     try:
-        sc.actions._providers_client.delete_custom_provider(
-            identifier=provider_identifier,
+        sc.actions.providers.delete_custom_provider(
+            DeleteCustomProviderRequest(identifier=provider_identifier)
         )
         print("  Provider deleted.")
     except Exception as e:
