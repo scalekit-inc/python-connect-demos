@@ -4,7 +4,7 @@ import uuid
 
 from dotenv import load_dotenv
 from scalekit import ScalekitClient
-from scalekit.actions.types import AuthPattern, OAuthConfig
+from scalekit.actions.types import AuthPattern, CreateCustomProviderRequest, DeleteCustomProviderRequest, OAuthConfig
 from scalekit.v1.connections.connections_pb2 import ConnectionType, CreateConnection, DeleteEnvironmentConnectionRequest, Flags
 from scalekit.v1.tools.tools_pb2 import ScopedToolFilter
 
@@ -25,27 +25,29 @@ def main():
 
     print("Creating custom OAuth provider for Custom Pylon MCP...")
     try:
-        create_result = sc.actions._providers_client.create_custom_provider(
-            display_name="Custom Pylon MCP",
-            description="Pylon integration via MCP",
-            proxy_url="https://mcp.usepylon.com",
-            proxy_enabled=True,
-            auth_patterns=[
-                AuthPattern(
-                    type="OAUTH",
-                    display_name="OAuth 2.1",
-                    description="Authenticate via browser OAuth.",
-                    is_mcp=True,
-                    oauth_config=OAuthConfig(),
-                )
-            ],
-            metadata={"tenant_id": str(uuid.uuid4())},
+        create_response = sc.actions.providers.create_custom_provider(
+            CreateCustomProviderRequest(
+                display_name="Custom Pylon MCP",
+                description="Pylon integration via MCP",
+                proxy_url="https://mcp.usepylon.com",
+                proxy_enabled=True,
+                auth_patterns=[
+                    AuthPattern(
+                        type="OAUTH",
+                        display_name="OAuth 2.1",
+                        description="Authenticate via browser OAuth.",
+                        is_mcp=True,
+                        oauth_config=OAuthConfig(),
+                    )
+                ],
+                metadata={"tenant_id": str(uuid.uuid4())},
+            )
         )
     except Exception as e:
         print(f"Failed to create provider: {e}")
         sys.exit(1)
 
-    provider = create_result[0].provider
+    provider = create_response.provider
     print(f"Provider created: identifier={provider.identifier}, name={provider.display_name}")
 
     # ── Create connection ─────────────────────────────────────────────────────
@@ -173,8 +175,8 @@ def cleanup(sc, connected_account_id, connection_id, connection_name, provider_i
 
     print("  Deleting custom provider...")
     try:
-        sc.actions._providers_client.delete_custom_provider(
-            identifier=provider_identifier,
+        sc.actions.providers.delete_custom_provider(
+            DeleteCustomProviderRequest(identifier=provider_identifier)
         )
         print("  Provider deleted.")
     except Exception as e:
