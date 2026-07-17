@@ -9,6 +9,7 @@ a single script.
 | `1_oauth_pylon_provider.py` | OAuth 2.1 | Creates a Pylon MCP connector and prints the authorization URL for the user to complete |
 | `2_bearer_apify_provider.py` | Bearer token | Creates an Apify MCP connector and lists available tools immediately after account creation |
 | `3_apikey_context7_provider.py` | API Key | Creates a Context7 MCP connector and queries library docs immediately after account creation |
+| `4_public_bloomreach_provider.py` | No Auth | Creates a public Bloomreach MCP connector (no credentials) and searches docs immediately after account creation |
 
 ---
 
@@ -78,3 +79,15 @@ python 3_apikey_context7_provider.py
 
 API key auth requires no browser flow — the key is active immediately. The script lists available
 tools then queries Next.js docs via `c-customcontext7mcp_query_docs`.
+
+---
+
+### Bloomreach Public (No Auth) MCP connector
+
+```bash
+python 4_public_bloomreach_provider.py
+```
+
+No-auth connectors require no credentials at all — the connected account is created with an empty
+`authorization_details` and is active immediately. The script lists available tools then searches
+Bloomreach docs via `c-publicbloomreachmcp_search`.
