@@ -134,7 +134,7 @@ def main():
             tool_name="c-customapifymcp_fetch-apify-docs",
             identifier=USER_IDENTIFIER,
             connection_name=connection_name,
-            tool_input={"url": "https://docs.apify.com/platform"},
+            tool_input={"url": "https://docs.apify.com/storage"},
         )
     except Exception as e:
         print(f"Failed to execute tool: {e}")
