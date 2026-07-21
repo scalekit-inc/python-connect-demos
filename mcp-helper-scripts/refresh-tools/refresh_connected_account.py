@@ -5,20 +5,39 @@ Uses scalekit-sdk-python. The SDK authenticates with your client credentials
 internally, so there is no separate access-token step.
 """
 
+import os
+import sys
+
+from dotenv import load_dotenv
 from scalekit import ScalekitClient
 from scalekit.v1.connected_accounts.connected_accounts_pb2 import UpdateConnectedAccount
 
-# ─────────────────────────────────────────────────────────────
-# YOUR INPUTS HERE
-# ─────────────────────────────────────────────────────────────
-ENV_URL = "https://your-auth-domain"   # your environment URL
-CLIENT_ID = "skc_xxxxxx"               # SCALEKIT_CLIENT_ID
-CLIENT_SECRET = "xxxxxxxx"             # SCALEKIT_CLIENT_SECRET
-CA_ID = "ca_xxxxxx"                     # connected account id
-# ─────────────────────────────────────────────────────────────
+load_dotenv()
+
+# ── Configuration (from .env — see .env.example) ─────────────
+ENV_URL = os.getenv("SCALEKIT_ENV_URL")
+CLIENT_ID = os.getenv("SCALEKIT_CLIENT_ID")
+CLIENT_SECRET = os.getenv("SCALEKIT_CLIENT_SECRET")
+CA_ID = os.getenv("CONNECTED_ACCOUNT_ID")
 
 
 def main() -> None:
+    missing = [
+        name
+        for name, value in {
+            "SCALEKIT_ENV_URL": ENV_URL,
+            "SCALEKIT_CLIENT_ID": CLIENT_ID,
+            "SCALEKIT_CLIENT_SECRET": CLIENT_SECRET,
+            "CONNECTED_ACCOUNT_ID": CA_ID,
+        }.items()
+        if not value
+    ]
+    if missing:
+        sys.exit(
+            f"Missing required env var(s): {', '.join(missing)}. "
+            "Copy .env.example to .env and fill in the values."
+        )
+
     client = ScalekitClient(
         env_url=ENV_URL,
         client_id=CLIENT_ID,

@@ -21,14 +21,22 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Then open `refresh_connected_account.py` and fill in the four values at the top:
+Then create your `.env` from the example and fill in your real values:
 
-```python
-ENV_URL = "https://your-env.scalekit.cloud"   # your environment URL
-CLIENT_ID = "skc_xxxxxxxxxxxxxxxx"             # SCALEKIT_CLIENT_ID
-CLIENT_SECRET = "test_xxxxxxxxxxxxxxxx"        # SCALEKIT_CLIENT_SECRET
-CA_ID = "ca_xxxxxxxxxxxxxxxx"                   # connected account id
+```bash
+cp .env.example .env
 ```
+
+Edit `.env`:
+
+```dotenv
+SCALEKIT_ENV_URL=https://your-auth-domain
+SCALEKIT_CLIENT_ID=skc_xxxxxx
+SCALEKIT_CLIENT_SECRET=xxxxxxxx
+CONNECTED_ACCOUNT_ID=ca_xxxxxx
+```
+
+`.env` is gitignored, so your credentials stay out of version control.
 
 ## Run
 

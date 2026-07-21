@@ -1,1 +1,2 @@
 scalekit-sdk-python
+python-dotenv
