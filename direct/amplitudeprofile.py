@@ -37,3 +37,7 @@ print("User profile:", profile_response)
 
 # No POST example: this connector wraps a single Amplitude endpoint
 # (GET /v1/userprofile) — there is no write/POST tool for Profile API.
+
+# No EU region example: Amplitude does not support the Profile API for
+# EU-region projects at all (confirmed in Amplitude's own docs), so this
+# connector has no domain/region selector — US only.
