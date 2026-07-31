@@ -8,3 +8,9 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "scalekit-sdk-python>=2.11.0",
 ]
+
+[tool.uv]
+constraint-dependencies = [
+  "cryptography>=48.0.1",
+  "pyjwt>=2.13.0",
+]
