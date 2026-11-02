@@ -25,6 +25,7 @@ def normalize(result: dict) -> tuple:
     outcome = re.sub(r"\d+(\.\d+)?s\b", "Ns", outcome)  # seconds inside the outcome text
     outcome = re.sub(r"(got|sent|after) \d+ MiB", r"\1 N MiB", outcome)
     outcome = re.sub(r"records=\d+", "records=N", outcome)
+    outcome = re.sub(r"xml \d+B", "xml NB", outcome)  # response size depends on the org's data
     return str(result.get("status")), outcome.strip()
 
 

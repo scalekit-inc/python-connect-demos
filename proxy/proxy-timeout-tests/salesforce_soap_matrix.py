@@ -18,7 +18,7 @@ connected account EXPIRED, so the failing cases run last.
 import argparse
 import re
 
-from common import ProxyClient, add_common_args, load_env, save_results, utc_now
+from common import ProxyClient, add_common_args, load_env, save_results, snapshot, utc_now
 
 SOAP_HEADERS = {"Content-Type": "text/xml; charset=UTF-8", "SOAPAction": '""'}
 NAMESPACES = 'xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:met="http://soap.sforce.com/2006/04/metadata"'
@@ -56,7 +56,7 @@ def main():
     def run(case_id, description, method, path, body, extra=SOAP_HEADERS, **options):
         r = client.request(method, path, body=body, extra=extra, **options)
         outcome = summarize(r)
-        results[case_id] = {"desc": description, "status": r["status"], "outcome": outcome, "elapsed": r["elapsed"]}
+        results[case_id] = {"desc": description, "status": r["status"], "outcome": outcome, "elapsed": r["elapsed"], "response": snapshot(r)}
         print(f"[{args.label} {utc_now()}] {case_id:4s} {description[:56]:56s} {r['status']} {outcome} ({r['elapsed']:.1f}s)", flush=True)
 
     soap = "/services/Soap/m/62.0"

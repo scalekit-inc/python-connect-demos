@@ -21,7 +21,7 @@ import re
 import threading
 import urllib.parse
 
-from common import ProxyClient, add_common_args, load_env, save_results, utc_now
+from common import ProxyClient, add_common_args, load_env, save_results, snapshot, utc_now
 
 MIB = 1 << 20
 
@@ -58,23 +58,28 @@ def main():
     parser.add_argument("--skip-huge", action="store_true", help="skip the huge upload and huge download cases")
     parser.add_argument("--huge-size-mib", type=int, default=1024, help="size of the huge file in MiB (default 1024)")
     parser.add_argument("--huge-file-id", help="Drive file id to download for the huge download case (skips the huge upload)")
+    parser.add_argument("--keep-files", action="store_true", help="keep the test files in Drive, give them readable names and list them (default: delete them)")
     parser.add_argument("--slow-connection", help="connection whose upstream stalls, for cases S1-S7")
     parser.add_argument("--slow-identifier", help="connected account identifier for --slow-connection")
     args = parser.parse_args()
 
     client = ProxyClient(load_env(args.env_file), args.connection, args.identifier)
-    results, created, lock = {}, [], threading.Lock()
+    results, created, names, lock = {}, [], {}, threading.Lock()
 
-    def record(case_id, description, status, outcome, elapsed, **extra):
+    def record(case_id, description, status, outcome, elapsed, call="last", **extra):
+        """Store the case result with the request and response of the call just made on this thread."""
+        response = snapshot(client.last() if call == "last" else call)
         with lock:
-            results[case_id] = {"desc": description, "status": status, "outcome": outcome, "elapsed": elapsed, **extra}
+            results[case_id] = {"desc": description, "status": status, "outcome": outcome, "elapsed": elapsed, "response": response, **extra}
             print(f"[{args.label} {utc_now()}] {case_id:4s} {description[:60]:60s} {status} {outcome} ({elapsed:.1f}s)", flush=True)
 
-    def drive_upload(path_query, total, rate=None):
+    def drive_upload(path_query, total, rate=None, label=None):
         response = client.upload(f"/upload/drive/v3/files?uploadType=media&fields=id,size,md5Checksum{path_query}", total, rate=rate)
         fid = file_id(response)
         if fid:
             created.append(fid)
+            if label:
+                names[fid] = label  # used by --keep-files: a media upload has no name, so Drive calls it "Untitled"
         return response, fid
 
     def checksum_outcome(response, total):
@@ -114,17 +119,17 @@ def main():
         record("M2", "multipart PATCH (update), 5 MiB", r["status"], "ok" if r["status"] == 200 else error_code(r["body"]), r["elapsed"])
 
     # ---- small, medium and large files ----
-    response, small_id = drive_upload("", 1024)
+    response, small_id = drive_upload("", 1024, label="F1-small-1KiB")
     record("F1", "small file upload, 1 KiB, checksum", response["status"], checksum_outcome(response, 1024) if small_id else error_code(response["body"]), response["elapsed"])
     if small_id:
         r = client.request("GET", f"/drive/v3/files/{small_id}?alt=media")
         record("F2", "small file download, checksum", r["status"], "ok md5 match" if r["md5"] == response["md5"] else "MISMATCH", r["elapsed"])
-    response, medium_id = drive_upload("", 5 * MIB)
+    response, medium_id = drive_upload("", 5 * MIB, label="F3-medium-5MiB")
     record("F3", "medium file upload, 5 MiB, checksum", response["status"], checksum_outcome(response, 5 * MIB) if medium_id else error_code(response["body"]), response["elapsed"])
     if medium_id:
         r = client.request("GET", f"/drive/v3/files/{medium_id}?alt=media")
         record("F4", "medium file download, checksum", r["status"], "ok md5 match" if r["md5"] == response["md5"] and r["got"] == 5 * MIB else "MISMATCH", r["elapsed"])
-    response, large_id = drive_upload("", 60 * MIB)
+    response, large_id = drive_upload("", 60 * MIB, label="F5-large-60MiB")
     record("F5", "large file upload, 60 MiB, checksum", response["status"], checksum_outcome(response, 60 * MIB) if large_id else response["end"], response["elapsed"])
     if large_id:
         r = client.request("GET", f"/drive/v3/files/{large_id}?alt=media", timeout=300)
@@ -137,7 +142,7 @@ def main():
         huge_bytes = args.huge_size_mib * MIB
         huge_md5, huge_id = None, args.huge_file_id
         if not huge_id:
-            response, huge_id = drive_upload("", huge_bytes)
+            response, huge_id = drive_upload("", huge_bytes, label="HU1-huge")
             huge_md5 = response["md5"]
             record("HU1", f"huge upload, {args.huge_size_mib} MiB, unthrottled", response["status"],
                    checksum_outcome(response, huge_bytes) if huge_id else f"cut after {response['sent'] >> 20} MiB ({response['end']})", response["elapsed"])
@@ -146,10 +151,10 @@ def main():
             expected = "ok md5 match" if huge_md5 and r["md5"] == huge_md5 and r["got"] == huge_bytes else None
             record("HD1", "huge download, full file, unthrottled", r["status"], expected or f"got {r['got'] >> 20} MiB {r['end']}", r["elapsed"])
         else:
-            record("HD1", "huge download, full file, unthrottled", "skipped", "the huge upload did not complete; pass --huge-file-id to test the download", 0.0)
+            record("HD1", "huge download, full file, unthrottled", "skipped", "the huge upload did not complete; pass --huge-file-id to test the download", 0.0, call=None)
 
     # ---- slow upload and slow download (outlast the old 10-second deadline, stay under 30 seconds of reading) ----
-    response, slow_up_id = drive_upload("", 45 * MIB, rate=3.0)
+    response, slow_up_id = drive_upload("", 45 * MIB, rate=3.0, label="SU1-slow-upload-45MiB")
     record("SU1", "slow upload, 45 MiB at about 3 MiB/s (~15s)", response["status"], checksum_outcome(response, 45 * MIB) if slow_up_id else response["end"], response["elapsed"])
     if slow_up_id:
         r = client.request("GET", f"/drive/v3/files/{slow_up_id}?alt=media", extra={"Range": f"bytes=0-{30 * MIB - 1}"}, rate_read=1.2, timeout=120)
@@ -213,6 +218,7 @@ def main():
             fid = file_id(r)
             if fid:
                 created.append(fid)
+                names[fid] = "L1-45-second-upload"
             record("L1", "upload that takes about 45s (past the 30s read timeout)", r["status"], "ok" if fid else f"cut after {r['sent'] >> 20} MiB ({r['end']})", r["elapsed"])
 
         big = {}
@@ -225,6 +231,7 @@ def main():
                 record("L2", "download held open past 60s", r["status"], "setup upload failed", r["elapsed"])
                 return
             created.append(fid)
+            names[fid] = "L2-60MiB-held-open-download"
             big["id"] = fid
             ready.set()
             d = client.request("GET", f"/drive/v3/files/{fid}?alt=media", rate_read=0.5, timeout=300)
@@ -266,9 +273,20 @@ def main():
         thread.join()
 
     # ---- clean up every file this run created ----
-    cleaned = [client.request("DELETE", f"/drive/v3/files/{fid}")["status"] for fid in created]
-    print(f"[{args.label}] deleted {len(created)} test files: {cleaned}")
-    save_results(args.out_dir, args.label, results, {"host": client.host})
+    kept = []
+    if args.keep_files:
+        for fid, label in names.items():
+            client.request("PATCH", f"/drive/v3/files/{fid}?fields=id,name", body=json.dumps({"name": f"proxy-tests-{label}.bin"}).encode(),
+                           extra={"Content-Type": "application/json"})
+        print(f"[{args.label}] kept {len(created)} test files in Drive (delete them when you finish):")
+        for fid in created:
+            info = json.loads(client.request("GET", f"/drive/v3/files/{fid}?fields=id,name,size,webViewLink")["body"] or "{}")
+            kept.append(info)
+            print(f"    {info.get('name', '?'):44s} {int(info.get('size', 0)) / MIB:9.2f} MiB  {info.get('webViewLink', '')}")
+    else:
+        cleaned = [client.request("DELETE", f"/drive/v3/files/{fid}")["status"] for fid in created]
+        print(f"[{args.label}] deleted {len(created)} test files: {cleaned}")
+    save_results(args.out_dir, args.label, results, {"host": client.host, "kept_files": kept})
 
 
 if __name__ == "__main__":

@@ -30,7 +30,20 @@ The run creates test files in the connected Drive and deletes them at the end. T
 | `--skip-huge` | Skips the huge upload and huge download. |
 | `--huge-size-mib` | Sets the huge file size. The default is 1024. |
 | `--huge-file-id` | Downloads an existing Drive file for the huge download case and skips the huge upload. |
+| `--keep-files` | Keeps the test files in Drive, names them `proxy-tests-<case>.bin` and prints a link to each. Delete them yourself afterwards. |
 | `--slow-connection`, `--slow-identifier` | Enables the stalled-upstream cases `S1` to `S7`. |
+
+## Build a report with raw responses
+
+Every results file stores the request and the response of each case: the status, key headers and the body (truncated to 4,000 characters; binary downloads show their size and checksum). `build_report.py` turns one or more pairs of results files into a Markdown report with a comparison table, per-case times and the raw responses.
+
+```bash
+python build_report.py --out report.md \
+  --pair "Google Drive proxy matrix" results_staging.json results_production.json \
+  --pair "Salesforce REST proxy" sfrest_staging.json sfrest_production.json
+```
+
+The report contains real ids and addresses from the tested accounts. Review it before you share it.
 
 ## Cases in the Drive matrix
 

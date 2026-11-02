@@ -13,7 +13,7 @@ import argparse
 import json
 import urllib.parse
 
-from common import ProxyClient, add_common_args, load_env, save_results, utc_now
+from common import ProxyClient, add_common_args, load_env, save_results, snapshot, utc_now
 
 
 def describe(response: dict) -> str:
@@ -67,7 +67,7 @@ def main():
     for case_id, description, method, path, options in cases:
         r = client.request(method, path, **options)
         outcome = describe(r) or ("ok" if r["status"] == 200 else "")
-        results[case_id] = {"desc": description, "status": r["status"], "outcome": outcome, "elapsed": r["elapsed"]}
+        results[case_id] = {"desc": description, "status": r["status"], "outcome": outcome, "elapsed": r["elapsed"], "response": snapshot(r)}
         print(f"[{args.label} {utc_now()}] {case_id:4s} {description[:56]:56s} {r['status']} {outcome} ({r['elapsed']:.1f}s)", flush=True)
     print(f"[{args.label}] account status after: {client.account_status()}")
     save_results(args.out_dir, args.label, results, {"host": client.host})

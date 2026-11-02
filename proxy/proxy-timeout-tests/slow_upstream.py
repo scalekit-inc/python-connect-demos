@@ -24,6 +24,13 @@ def stamp() -> str:
     return datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3] + "Z"
 
 
+class StalledServer(ThreadingHTTPServer):
+    # The default listen backlog is 5. Several stalled requests can arrive at once, and a refused
+    # connection shows up in the caller as a 502 from the tunnel, not as a stalled upstream.
+    request_queue_size = 128
+    daemon_threads = True
+
+
 def make_handler(default_delay: int):
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -64,7 +71,7 @@ def main():
     parser.add_argument("--port", type=int, default=9500)
     parser.add_argument("--default-delay", type=int, default=90, help="seconds to wait when the path has no /delay/<n>/ segment")
     args = parser.parse_args()
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(args.default_delay))
+    server = StalledServer(("127.0.0.1", args.port), make_handler(args.default_delay))
     print(f"listening on 127.0.0.1:{args.port}, default delay {args.default_delay}s", file=sys.stderr, flush=True)
     server.serve_forever()
 

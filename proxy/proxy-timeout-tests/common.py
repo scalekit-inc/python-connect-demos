@@ -11,6 +11,7 @@ import http.client
 import json
 import os
 import ssl
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -19,6 +20,7 @@ from urllib.parse import urlparse
 
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"  # <repo>/.env
 REQUIRED = ("TOOL_ENV_URL", "TOOL_CLIENT_ID", "TOOL_CLIENT_SECRET")
+TEXT_TYPES = ("json", "xml", "text", "html", "javascript")
 
 
 def utc_now() -> str:
@@ -74,6 +76,29 @@ def add_common_args(parser: argparse.ArgumentParser, default_label="run"):
     return parser
 
 
+def request_info(method, path, body_bytes, extra):
+    """Describe a request for the results file. Credentials are never recorded."""
+    safe = {k: v for k, v in (extra or {}).items() if k.lower() in ("x-proxy-domain", "range", "content-type", "soapaction")}
+    return {"method": method, "path": "/proxy" + path, "body_bytes": body_bytes, "headers": safe}
+
+
+def snapshot(result, limit=4000):
+    """A JSON-friendly copy of one request and response for the results file."""
+    if not result:
+        return None
+    ctype = (result.get("content_type") or "").lower()
+    body = result.get("body", "")
+    if result.get("status") == "ERR":
+        text = result.get("end", "")
+    elif not ctype or any(t in ctype for t in TEXT_TYPES):
+        text = body[:limit]
+    else:
+        text = f"<{result.get('got', 0)} bytes of {ctype}; md5 {result.get('md5', '')}>"
+    return {"request": result.get("request"), "status": result.get("status"), "elapsed": round(result.get("elapsed", 0), 2),
+            "content_type": ctype, "headers": result.get("headers") or {}, "body": text,
+            "bytes_received": result.get("got"), "end": result.get("end")}
+
+
 class ProxyClient:
     def __init__(self, env: dict, connection: str, identifier: str):
         self.env = env
@@ -82,6 +107,7 @@ class ProxyClient:
         self.connection = connection
         self.identifier = identifier
         self.token = fetch_token(env)
+        self._local = threading.local()  # last request and response per thread, read by last()
 
     # -- plumbing -----------------------------------------------------------------
     def headers(self, auth=True, connection=None, identifier=None, drop=(), extra=None) -> dict:
@@ -123,8 +149,12 @@ class ProxyClient:
                         time.sleep(len(chunk) / (rate_read * 1048576))
             except Exception as exc:  # the stream was cut mid-body
                 end = "ERR " + type(exc).__name__
-            return {"status": resp.status, "elapsed": time.time() - start, "body": kept.decode("utf-8", "replace"),
-                    "got": got, "md5": md5.hexdigest(), "end": end, "content_type": resp.getheader("content-type", "")}
+            result = {"status": resp.status, "elapsed": time.time() - start, "body": kept.decode("utf-8", "replace"),
+                      "got": got, "md5": md5.hexdigest(), "end": end, "content_type": resp.getheader("content-type", ""),
+                      "headers": dict(resp.getheaders()),
+                      "request": request_info(method, path, len(body) if body else 0, extra)}
+            self._local.last = result
+            return result
         return retry(go)
 
     def upload(self, path, total, rate=None, method="POST", extra=None) -> dict:
@@ -147,9 +177,17 @@ class ProxyClient:
                     time.sleep(len(chunk) / (rate * 1048576))
             resp = conn.getresponse()
             body, status, end = resp.read().decode("utf-8", "replace"), resp.status, "complete"
+            content_type, resp_headers = resp.getheader("content-type", ""), dict(resp.getheaders())
         except Exception as exc:
-            status, body, end = "ERR", "", "ERR " + type(exc).__name__
-        return {"status": status, "elapsed": time.time() - start, "body": body[:600], "sent": sent, "md5": md5.hexdigest(), "end": end}
+            status, body, end, content_type, resp_headers = "ERR", "", "ERR " + type(exc).__name__, "", {}
+        result = {"status": status, "elapsed": time.time() - start, "body": body[:4000], "sent": sent, "md5": md5.hexdigest(), "end": end,
+                  "content_type": content_type, "headers": resp_headers, "request": request_info(method, path, total, extra)}
+        self._local.last = result
+        return result
+
+    def last(self):
+        """The most recent request and response made on the calling thread."""
+        return getattr(self._local, "last", None)
 
     def account_status(self):
         """Connected account status (handy: invalid-session calls can flip it to EXPIRED)."""
